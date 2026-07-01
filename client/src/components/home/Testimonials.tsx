@@ -39,7 +39,7 @@ export function Testimonials() {
 
         <div className="mt-12 text-center">
           <a
-            href="https://g.page/r/luxenailbar/review"
+            href="https://g.page/r/nailbar/review"
             target="_blank"
             rel="noopener noreferrer"
             className="btn-gold"

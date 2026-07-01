@@ -29,7 +29,7 @@ export function Navbar() {
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
         <Link to="/" className="flex items-center gap-2">
           <span className="text-2xl font-serif font-bold tracking-wide text-blush-600">
-            Luxe <span className="text-gold-500">Nail Bar</span>
+            Nail <span className="text-gold-500">Bar</span>
           </span>
         </Link>
 

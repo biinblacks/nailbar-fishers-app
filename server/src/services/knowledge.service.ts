@@ -92,7 +92,7 @@ export async function buildKnowledgeBaseContext(): Promise<string> {
 
   return `
 SALON PROFILE
-Name: ${profile?.name ?? "Luxe Nail Bar"}
+Name: ${profile?.name ?? "Nail Bar"}
 Address: ${profile?.address ?? "unknown"}
 Phone: ${profile?.phone ?? "unknown"}
 Email: ${profile?.email ?? "unknown"}

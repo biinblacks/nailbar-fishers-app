@@ -6,7 +6,7 @@ export function Footer() {
       <div className="mx-auto grid max-w-7xl gap-10 px-6 py-16 md:grid-cols-3">
         <div>
           <h3 className="text-2xl font-serif font-bold text-blush-600">
-            Luxe <span className="text-gold-500">Nail Bar</span>
+            Nail <span className="text-gold-500">Bar</span>
           </h3>
           <p className="mt-3 max-w-xs text-sm text-blush-800/80">
             A modern, minimal nail bar experience — premium services, warm hospitality, and a
@@ -24,8 +24,8 @@ export function Footer() {
               </a>
             </li>
             <li>
-              <a href="mailto:hello@luxenailbar.com" className="hover:text-blush-500">
-                hello@luxenailbar.com
+              <a href="mailto:hello@nailbar.com" className="hover:text-blush-500">
+                hello@nailbar.com
               </a>
             </li>
             <li>Mon–Fri 9:30 AM–7:00 PM · Sat 9:30 AM–6:00 PM · Sun 11:00 AM–5:00 PM</li>
@@ -55,7 +55,7 @@ export function Footer() {
       </div>
 
       <div className="border-t border-blush-100 py-6 text-center text-xs text-blush-800/60">
-        © {new Date().getFullYear()} Luxe Nail Bar. All rights reserved.
+        © {new Date().getFullYear()} Nail Bar. All rights reserved.
       </div>
     </footer>
   );

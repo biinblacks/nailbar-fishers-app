@@ -1,11 +1,11 @@
 -- ============================================================================
--- Seed data for Luxe Nail Bar (Fishers, IN) — realistic starter content.
+-- Seed data for Nail Bar (Fishers, IN) — realistic starter content.
 -- Run after schema.sql.
 -- ============================================================================
 
 insert into salon_profile (name, address, phone, email, parking_info, google_review_link, google_map_link, instagram_link, facebook_link)
 values (
-  'Luxe Nail Bar',
+  'Nail Bar',
   '8970 E 96TH ST FISHERS IN 46037',
   '(317) 555-0182',
   'hello@luxenailbar.com',

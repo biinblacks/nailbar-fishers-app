@@ -1,4 +1,4 @@
-# Luxe Nail Bar — AI Nail Salon Receptionist SaaS
+# Nail Bar — AI Nail Salon Receptionist SaaS
 
 A production-ready full-stack app for a nail salon: a luxury marketing site, a 24/7 AI
 receptionist chatbot (Gemini), online booking backed by Supabase, an admin dashboard, and

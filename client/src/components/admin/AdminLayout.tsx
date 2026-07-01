@@ -25,7 +25,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
       <div className="flex min-h-screen">
         <aside className="hidden w-64 flex-col border-r border-blush-100 bg-white p-6 md:flex">
           <p className="text-xl font-serif font-bold text-blush-600">
-            Luxe <span className="text-gold-500">Admin</span>
+            Nail Bar <span className="text-gold-500">Admin</span>
           </p>
           <nav className="mt-8 flex flex-1 flex-col gap-1">
             {NAV_ITEMS.map((item) => (

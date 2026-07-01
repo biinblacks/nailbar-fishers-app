@@ -1,7 +1,7 @@
 import { Link, useSearchParams } from "react-router-dom";
 import { Card } from "../components/ui/Card";
 
-const GOOGLE_REVIEW_LINK = "https://g.page/r/luxenailbar/review";
+const GOOGLE_REVIEW_LINK = "https://g.page/r/nailbar/review";
 
 export function ReviewPage() {
   const [params] = useSearchParams();
@@ -18,7 +18,7 @@ export function ReviewPage() {
         </h1>
         <p className="mt-3 text-2xl text-gold-400">★★★★★</p>
         <p className="mt-4 text-sm text-blush-800/70">
-          We hope you loved your experience at Luxe Nail Bar. If you have a moment, we'd be so
+          We hope you loved your experience at Nail Bar. If you have a moment, we'd be so
           grateful if you could share your feedback with a Google Review — it helps our small
           business grow.
         </p>

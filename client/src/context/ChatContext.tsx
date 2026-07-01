@@ -41,7 +41,7 @@ const WELCOME_MESSAGE: ChatUiMessage = {
   id: "welcome",
   role: "assistant",
   content:
-    "Hi there! I'm the Luxe Nail Bar virtual receptionist. Ask me about services, pricing, hours, or I can help you book an appointment.",
+    "Hi there! I'm the Nail Bar virtual receptionist. Ask me about services, pricing, hours, or I can help you book an appointment.",
 };
 
 const ChatContext = createContext<ChatContextValue | undefined>(undefined);

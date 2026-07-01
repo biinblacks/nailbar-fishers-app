@@ -27,8 +27,8 @@ export function Contact() {
             </li>
             <li>
               <span className="font-semibold">Email:</span>{" "}
-              <a href="mailto:hello@luxenailbar.com" className="text-blush-500 hover:underline">
-                hello@luxenailbar.com
+              <a href="mailto:hello@nailbar.com" className="text-blush-500 hover:underline">
+                hello@nailbar.com
               </a>
             </li>
             <li>
@@ -44,7 +44,7 @@ export function Contact() {
 
         <div className="overflow-hidden rounded-2xl">
           <iframe
-            title="Luxe Nail Bar Location"
+            title="Nail Bar Location"
             className="h-72 w-full rounded-2xl border-0 md:h-full"
             loading="lazy"
             src="https://maps.google.com/maps?q=8970%20E%2096th%20St%20Fishers%20IN%2046037&t=&z=14&ie=UTF8&iwloc=&output=embed"

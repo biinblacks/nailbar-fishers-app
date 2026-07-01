@@ -34,7 +34,7 @@ export function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-blush-50/60 px-6">
       <Card className="w-full max-w-sm">
         <h1 className="text-center text-2xl font-serif font-bold text-blush-900">
-          Luxe <span className="text-gold-500">Admin</span>
+          Nail Bar <span className="text-gold-500">Admin</span>
         </h1>
         <p className="mt-2 text-center text-sm text-blush-800/70">
           Sign in to manage your salon dashboard.

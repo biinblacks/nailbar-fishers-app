@@ -10,7 +10,7 @@ create extension if not exists "pgcrypto";
 -- ----------------------------------------------------------------------------
 create table if not exists salon_profile (
   id uuid primary key default gen_random_uuid(),
-  name text not null default 'Luxe Nail Bar',
+  name text not null default 'Nail Bar',
   address text not null default '8970 E 96TH ST FISHERS IN 46037',
   phone text not null default '(317) 555-0182',
   email text not null default 'hello@luxenailbar.com',

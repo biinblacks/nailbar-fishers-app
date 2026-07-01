@@ -32,7 +32,7 @@ export function ChatWidget() {
     <div className="pointer-events-auto fixed inset-x-4 bottom-4 z-50 mx-auto flex h-[min(640px,80vh)] max-w-sm flex-col overflow-hidden rounded-3xl border border-blush-100 bg-white shadow-2xl sm:right-6 sm:left-auto sm:bottom-6">
       <div className="flex items-center justify-between bg-gradient-to-r from-blush-500 to-blush-600 px-5 py-4 text-white">
         <div>
-          <p className="font-serif text-lg font-semibold">Luxe Nail Bar</p>
+          <p className="font-serif text-lg font-semibold">Nail Bar</p>
           <p className="text-xs text-white/80">AI Receptionist · Usually replies instantly</p>
         </div>
         <button
