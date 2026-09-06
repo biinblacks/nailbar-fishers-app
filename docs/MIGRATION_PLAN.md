@@ -95,17 +95,27 @@ Built new — no prior code existed.
 - Later (Phase 6): hosted natural Vietnamese TTS voices, streaming translation, offline
       phrase packs.
 
-## Phase 4 — Automation (2 weeks)
+## Phase 4 — Automation (this branch) ✅
 
-- `automation_rules` per salon (type, enabled, offset, channel, template) with defaults:
-  appointment reminder (24h + 2h), review request (2h after `completed`), comeback reminder
-  (N weeks since `last_visit_at`), birthday promo, new-customer follow-up.
-- `automation_jobs` queue populated by DB triggers (appointment status changes) and a daily
-  `pg_cron` sweep; processed by a Supabase Edge Function or Vercel Cron route.
-- Channels: SMS (Twilio) and email (Resend); every send logged in `message_log`;
-  `customers.marketing_opt_in` and quiet hours respected.
-- Dashboard: `/app/[slug]/automations` to toggle rules, edit templates (EN/VI), and see
-  the send log.
+- [x] `supabase/migrations/0005_automations.sql`: `automation_rules` (bilingual templates,
+      channel, offsets, sending window), `automation_jobs` queue with dedupe keys,
+      `message_log`; trigger cancels pending reminders when an appointment is cancelled,
+      no-show or rescheduled; `ensure_automation_rules()` seeds six default rules per salon
+      (also called from `create_salon()`).
+- [x] Rule types with defaults (all off until the owner enables them): reminder 24 h and 2 h
+      before; review request 2 h after completion; new-guest follow-up next day;
+      comeback after 35 days with nothing booked (max once a month); birthday treat 3 days
+      before.
+- [x] Worker `web/lib/automations/`: planner (idempotent) + sender (quiet hours in the salon
+      timezone, opt-out respected for marketing types, per-guest language, retries, full
+      log). `GET/POST /api/cron/automations` protected by `CRON_SECRET`; `web/vercel.json`
+      schedules it every 15 minutes. "Run automations now" button for manual runs.
+- [x] Channels: SMS via Twilio REST, email via Resend, `MESSAGING_DRY_RUN=true` for testing.
+- [x] Dashboard `/app/[slug]/automations`: edit each rule (EN/VI templates with
+      placeholders, channel, timing, sending window), queued messages with cancel, recent
+      sends with status/errors, delivery + scheduler status.
+- Later (Phase 6): per-salon sending numbers, two-way SMS replies into the inbox,
+      delivery webhooks from Twilio/Resend.
 
 ## Phase 5 — AI Marketing (2 weeks)
 

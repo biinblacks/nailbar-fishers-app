@@ -173,6 +173,151 @@ export type Database = {
           },
         ]
       }
+      automation_jobs: {
+        Row: {
+          appointment_id: string | null
+          attempts: number
+          channel: Database["public"]["Enums"]["message_channel"]
+          created_at: string
+          customer_id: string | null
+          dedupe_key: string
+          id: string
+          language: string
+          last_error: string | null
+          recipient: string | null
+          rule_id: string | null
+          salon_id: string
+          scheduled_for: string
+          sent_at: string | null
+          status: Database["public"]["Enums"]["automation_job_status"]
+          type: Database["public"]["Enums"]["automation_type"]
+        }
+        Insert: {
+          appointment_id?: string | null
+          attempts?: number
+          channel: Database["public"]["Enums"]["message_channel"]
+          created_at?: string
+          customer_id?: string | null
+          dedupe_key: string
+          id?: string
+          language?: string
+          last_error?: string | null
+          recipient?: string | null
+          rule_id?: string | null
+          salon_id: string
+          scheduled_for: string
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["automation_job_status"]
+          type: Database["public"]["Enums"]["automation_type"]
+        }
+        Update: {
+          appointment_id?: string | null
+          attempts?: number
+          channel?: Database["public"]["Enums"]["message_channel"]
+          created_at?: string
+          customer_id?: string | null
+          dedupe_key?: string
+          id?: string
+          language?: string
+          last_error?: string | null
+          recipient?: string | null
+          rule_id?: string | null
+          salon_id?: string
+          scheduled_for?: string
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["automation_job_status"]
+          type?: Database["public"]["Enums"]["automation_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automation_jobs_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "automation_jobs_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "automation_jobs_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "automation_rules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "automation_jobs_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      automation_rules: {
+        Row: {
+          channel: Database["public"]["Enums"]["message_channel"]
+          created_at: string
+          id: string
+          interval_days: number | null
+          is_enabled: boolean
+          name: string
+          offset_minutes: number
+          salon_id: string
+          send_hour_end: number
+          send_hour_start: number
+          template_en: string
+          template_vi: string
+          type: Database["public"]["Enums"]["automation_type"]
+          updated_at: string
+        }
+        Insert: {
+          channel?: Database["public"]["Enums"]["message_channel"]
+          created_at?: string
+          id?: string
+          interval_days?: number | null
+          is_enabled?: boolean
+          name: string
+          offset_minutes?: number
+          salon_id: string
+          send_hour_end?: number
+          send_hour_start?: number
+          template_en: string
+          template_vi: string
+          type: Database["public"]["Enums"]["automation_type"]
+          updated_at?: string
+        }
+        Update: {
+          channel?: Database["public"]["Enums"]["message_channel"]
+          created_at?: string
+          id?: string
+          interval_days?: number | null
+          is_enabled?: boolean
+          name?: string
+          offset_minutes?: number
+          salon_id?: string
+          send_hour_end?: number
+          send_hour_start?: number
+          template_en?: string
+          template_vi?: string
+          type?: Database["public"]["Enums"]["automation_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automation_rules_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_hours: {
         Row: {
           close_time: string | null
@@ -516,6 +661,76 @@ export type Database = {
             columns: ["session_id"]
             isOneToOne: false
             referencedRelation: "interpreter_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      message_log: {
+        Row: {
+          body: string
+          channel: Database["public"]["Enums"]["message_channel"]
+          created_at: string
+          customer_id: string | null
+          error: string | null
+          id: string
+          job_id: string | null
+          provider: string
+          provider_message_id: string | null
+          recipient: string
+          salon_id: string
+          status: string
+          subject: string | null
+        }
+        Insert: {
+          body: string
+          channel: Database["public"]["Enums"]["message_channel"]
+          created_at?: string
+          customer_id?: string | null
+          error?: string | null
+          id?: string
+          job_id?: string | null
+          provider: string
+          provider_message_id?: string | null
+          recipient: string
+          salon_id: string
+          status: string
+          subject?: string | null
+        }
+        Update: {
+          body?: string
+          channel?: Database["public"]["Enums"]["message_channel"]
+          created_at?: string
+          customer_id?: string | null
+          error?: string | null
+          id?: string
+          job_id?: string | null
+          provider?: string
+          provider_message_id?: string | null
+          recipient?: string
+          salon_id?: string
+          status?: string
+          subject?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_log_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_log_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "automation_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_log_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
             referencedColumns: ["id"]
           },
         ]
@@ -1175,6 +1390,10 @@ export type Database = {
         }
       }
       dearmor: { Args: { "": string }; Returns: string }
+      ensure_automation_rules: {
+        Args: { p_salon_id: string }
+        Returns: undefined
+      }
       gen_random_uuid: { Args: Record<PropertyKey, never>; Returns: string }
       gen_salt: { Args: { "": string }; Returns: string }
       get_salon_invite: {
@@ -1205,7 +1424,20 @@ export type Database = {
         | "completed"
         | "cancelled"
         | "no_show"
+      automation_job_status:
+        | "pending"
+        | "sent"
+        | "skipped"
+        | "failed"
+        | "cancelled"
+      automation_type:
+        | "appointment_reminder"
+        | "review_request"
+        | "comeback_reminder"
+        | "birthday_promo"
+        | "new_customer_followup"
       chat_role: "user" | "assistant" | "system"
+      message_channel: "sms" | "email"
       salon_role: "owner" | "admin" | "staff"
     }
     CompositeTypes: {
@@ -1341,7 +1573,22 @@ export const Constants = {
         "cancelled",
         "no_show",
       ],
+      automation_job_status: [
+        "pending",
+        "sent",
+        "skipped",
+        "failed",
+        "cancelled",
+      ],
+      automation_type: [
+        "appointment_reminder",
+        "review_request",
+        "comeback_reminder",
+        "birthday_promo",
+        "new_customer_followup",
+      ],
       chat_role: ["user", "assistant", "system"],
+      message_channel: ["sms", "email"],
       salon_role: ["owner", "admin", "staff"],
     },
   },

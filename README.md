@@ -13,9 +13,9 @@ Docs: [`docs/AUDIT.md`](docs/AUDIT.md) · [`docs/ARCHITECTURE.md`](docs/ARCHITEC
 ├── web/        Next.js 15 (App Router) SaaS dashboard  ← Phase 1, the future of the product
 │   ├── app/
 │   │   ├── (auth)/ login, signup, forgot-password
-│   │   ├── app/[slug]/  dashboard: appointments, customers, interpreter, services, staff, inbox, receptionist, gallery, settings
+│   │   ├── app/[slug]/  dashboard: appointments, customers, interpreter, automations, services, staff, inbox, receptionist, gallery, settings
 │   │   ├── s/[slug]/    public storefront, /book, /book/[id], /chat (iframe embed), /review
-│   │   └── api/         /api/chat, /api/salons/[slug]/availability, /api/interpreter/{translate,transcribe}
+│   │   └── api/         /api/chat, /api/salons/[slug]/availability, /api/interpreter/*, /api/cron/automations
 │   ├── actions/    server actions (zod-validated; dashboard ones are RLS-scoped)
 │   ├── components/ ui/, forms/, app/ (dashboard shell), storefront/, booking/, chat/
 │   └── lib/        supabase clients, availability engine, booking, ai/ (providers + receptionist)
@@ -42,9 +42,10 @@ Run in the SQL editor, in order:
 3. `supabase/migrations/0002_receptionist_and_booking.sql`
 4. `supabase/migrations/0003_invites_and_media.sql` (team invites, gallery, `salon-media` storage bucket)
 5. `supabase/migrations/0004_interpreter.sql` (Bee Interpreter sessions + quick phrases)
-6. `supabase/seed.sql` (optional demo salon `nail-bar`)
+6. `supabase/migrations/0005_automations.sql` (automation rules, job queue, message log)
+7. `supabase/seed.sql` (optional demo salon `nail-bar`)
 
-Upgrading an existing install: run steps 2–5 only. After changing the schema, regenerate
+Upgrading an existing install: run steps 2–6 only. After changing the schema, regenerate
 `web/lib/database.types.ts` (see `web/scripts/gen-types.md`). It creates the `nail-bar` salon from your
 current `salon_profile` row, backfills `salon_id` everywhere, and turns every `admin_users`
 row into an **owner** of that salon. It is idempotent.
@@ -151,14 +152,28 @@ call the model. Speech recognition uses the browser's Web Speech API; browsers w
 record audio and transcribe it server-side with Gemini (needs `GEMINI_API_KEY`).
 Translation goes through the same provider setting as the AI receptionist.
 
-## 8. Deployment
+## 8. Automations (Phase 4)
+
+Dashboard → Automations lists six rules per salon, all off by default: reminders 24 h and
+2 h before, review request after a completed visit, next-day follow-up for first-time
+guests, comeback nudge after 35 days, birthday treat 3 days early. Each rule has an
+English and a Vietnamese template (guests get the language on their profile), a channel
+(SMS via Twilio or email via Resend), timing, and a sending window in the salon timezone.
+
+The worker at `/api/cron/automations` plans and sends messages; `web/vercel.json` runs it
+every 15 minutes on Vercel Cron with `CRON_SECRET`. Any scheduler can call it with
+`Authorization: Bearer <CRON_SECRET>`. Set `MESSAGING_DRY_RUN=true` to log instead of
+send. Cancelled or rescheduled appointments drop their pending reminders automatically,
+and guests who opt out only receive appointment reminders.
+
+## 9. Deployment
 
 - **web** → Vercel, root directory `web`, framework Next.js, env vars from `web/.env.example`.
 - **client** → Vercel, root directory `client` (unchanged), plus `VITE_SALON_SLUG`.
 - **server** → Render/Railway/Fly, root `server`, `npm run build` / `npm start`, add
   `DEFAULT_SALON_SLUG`.
 
-## 9. Security notes
+## 10. Security notes
 
 - Service role key is used only by `server/` (never in `web/` or `client/`).
 - Anonymous access is read-only and limited to active storefront content; chat transcripts,

@@ -9,6 +9,7 @@ import {
   Inbox,
   LayoutDashboard,
   Languages,
+  BellRing,
   Scissors,
   Settings,
   Users,
@@ -36,6 +37,7 @@ export function navItems(slug: string) {
     { href: `${base}/inbox`, label: "Inbox", icon: Inbox },
     { href: `${base}/receptionist`, label: "AI Receptionist", icon: Bot },
     { href: `${base}/gallery`, label: "Gallery", icon: Images },
+    { href: `${base}/automations`, label: "Automations", icon: BellRing },
     { href: `${base}/settings`, label: "Settings", icon: Settings },
   ];
 }
