@@ -13,9 +13,9 @@ Docs: [`docs/AUDIT.md`](docs/AUDIT.md) · [`docs/ARCHITECTURE.md`](docs/ARCHITEC
 ├── web/        Next.js 15 (App Router) SaaS dashboard  ← Phase 1, the future of the product
 │   ├── app/
 │   │   ├── (auth)/ login, signup, forgot-password
-│   │   ├── app/[slug]/  dashboard: appointments, customers, services, staff, inbox, receptionist, settings
+│   │   ├── app/[slug]/  dashboard: appointments, customers, interpreter, services, staff, inbox, receptionist, gallery, settings
 │   │   ├── s/[slug]/    public storefront, /book, /book/[id], /chat (iframe embed), /review
-│   │   └── api/         /api/chat (AI receptionist), /api/salons/[slug]/availability
+│   │   └── api/         /api/chat, /api/salons/[slug]/availability, /api/interpreter/{translate,transcribe}
 │   ├── actions/    server actions (zod-validated; dashboard ones are RLS-scoped)
 │   ├── components/ ui/, forms/, app/ (dashboard shell), storefront/, booking/, chat/
 │   └── lib/        supabase clients, availability engine, booking, ai/ (providers + receptionist)
@@ -41,9 +41,10 @@ Run in the SQL editor, in order:
 2. `supabase/migrations/0001_multi_tenant_salons.sql`
 3. `supabase/migrations/0002_receptionist_and_booking.sql`
 4. `supabase/migrations/0003_invites_and_media.sql` (team invites, gallery, `salon-media` storage bucket)
-5. `supabase/seed.sql` (optional demo salon `nail-bar`)
+5. `supabase/migrations/0004_interpreter.sql` (Bee Interpreter sessions + quick phrases)
+6. `supabase/seed.sql` (optional demo salon `nail-bar`)
 
-Upgrading an existing install: run steps 2–4 only. After changing the schema, regenerate
+Upgrading an existing install: run steps 2–5 only. After changing the schema, regenerate
 `web/lib/database.types.ts` (see `web/scripts/gen-types.md`). It creates the `nail-bar` salon from your
 current `salon_profile` row, backfills `salon_id` everywhere, and turns every `admin_users`
 row into an **owner** of that salon. It is idempotent.
@@ -140,14 +141,24 @@ Every salon gets, with no extra setup:
 The Express API keeps serving the legacy Vite storefront until you cut the domain over to
 `/s/<slug>`.
 
-## 7. Deployment
+## 7. Bee Interpreter (Phase 3)
+
+Dashboard → Interpreter opens a two-person console: the technician side (Vietnamese by
+default) and the guest side (English by default). Tap a mic or type; the message is
+translated for the other person, read aloud with the device's voice, and saved to the
+conversation history. Quick phrases cover the usual salon flow with one tap and never
+call the model. Speech recognition uses the browser's Web Speech API; browsers without it
+record audio and transcribe it server-side with Gemini (needs `GEMINI_API_KEY`).
+Translation goes through the same provider setting as the AI receptionist.
+
+## 8. Deployment
 
 - **web** → Vercel, root directory `web`, framework Next.js, env vars from `web/.env.example`.
 - **client** → Vercel, root directory `client` (unchanged), plus `VITE_SALON_SLUG`.
 - **server** → Render/Railway/Fly, root `server`, `npm run build` / `npm start`, add
   `DEFAULT_SALON_SLUG`.
 
-## 8. Security notes
+## 9. Security notes
 
 - Service role key is used only by `server/` (never in `web/` or `client/`).
 - Anonymous access is read-only and limited to active storefront content; chat transcripts,

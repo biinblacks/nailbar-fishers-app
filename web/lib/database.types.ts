@@ -406,6 +406,120 @@ export type Database = {
           },
         ]
       }
+      interpreter_sessions: {
+        Row: {
+          created_at: string
+          customer_id: string | null
+          ended_at: string | null
+          id: string
+          lang_a: string
+          lang_b: string
+          salon_id: string
+          started_at: string
+          started_by: string | null
+          title: string | null
+          turn_count: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id?: string | null
+          ended_at?: string | null
+          id?: string
+          lang_a?: string
+          lang_b?: string
+          salon_id: string
+          started_at?: string
+          started_by?: string | null
+          title?: string | null
+          turn_count?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string | null
+          ended_at?: string | null
+          id?: string
+          lang_a?: string
+          lang_b?: string
+          salon_id?: string
+          started_at?: string
+          started_by?: string | null
+          title?: string | null
+          turn_count?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interpreter_sessions_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interpreter_sessions_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      interpreter_turns: {
+        Row: {
+          created_at: string
+          id: string
+          salon_id: string
+          session_id: string
+          source_lang: string
+          source_text: string
+          speaker: string
+          target_lang: string
+          translated_text: string
+          via: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          salon_id: string
+          session_id: string
+          source_lang: string
+          source_text: string
+          speaker: string
+          target_lang: string
+          translated_text: string
+          via?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          salon_id?: string
+          session_id?: string
+          source_lang?: string
+          source_text?: string
+          speaker?: string
+          target_lang?: string
+          translated_text?: string
+          via?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interpreter_turns_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interpreter_turns_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "interpreter_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -470,6 +584,47 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "promotions_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quick_phrases: {
+        Row: {
+          category: string
+          created_at: string
+          display_order: number
+          id: string
+          is_active: boolean
+          salon_id: string | null
+          text_en: string
+          text_vi: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          salon_id?: string | null
+          text_en: string
+          text_vi: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          salon_id?: string | null
+          text_en?: string
+          text_vi?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quick_phrases_salon_id_fkey"
             columns: ["salon_id"]
             isOneToOne: false
             referencedRelation: "salons"

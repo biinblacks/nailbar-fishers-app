@@ -71,22 +71,29 @@ new salons.
       `/app/nail-bar/receptionist` and review the knowledge; point the domain at
       `/s/nail-bar` once you are happy; keep `client/` + `server/` running until then.
 
-## Phase 3 — Bee Interpreter (2 weeks)
+## Phase 3 — Bee Interpreter (this branch) ✅
 
-Built new; nothing exists yet.
+Built new — no prior code existed.
 
-- Tables: `interpreter_sessions (salon_id, started_by, customer_id?, language_a, language_b)`,
-  `interpreter_turns (session_id, speaker, source_lang, source_text, target_text, audio_url?)`,
-  `quick_phrases (salon_id nullable for global defaults, category, text_en, text_vi)`.
-- UI at `/app/[slug]/interpreter`: two-person split screen (technician side VI, customer
-  side EN, swappable), push-to-talk per side, live transcript, quick-phrase bar
-  (greeting, shape, length, color, price, wait time, aftercare, payment).
-- Speech-to-text: Web Speech API in the browser first (free, works in Chrome/Safari);
-  server route with a hosted STT model as fallback for accuracy.
-- Translation: LLM route handler with a nail-salon glossary (gel-x, dip, acrylic, cuticle,
-  ombré, chrome…) to keep terminology consistent; cached quick phrases skip the model.
-- Text-to-speech: `speechSynthesis` first, hosted TTS later for natural Vietnamese voices.
-- History: sessions saved per salon, optionally attached to a customer profile.
+- [x] `supabase/migrations/0004_interpreter.sql`: `interpreter_sessions`, `interpreter_turns`
+      (trigger keeps turn count + auto title), `quick_phrases` with 30 built-in nail-salon
+      phrases (global rows are read-only; each salon adds its own), membership RLS.
+- [x] Two-person console at `/app/[slug]/interpreter`: technician side and guest side,
+      each with push-to-talk and a text box; languages vi / en / es / zh / ko, swappable.
+      Every utterance is translated for the other side, read aloud, and saved.
+- [x] Speech-to-text: browser Web Speech API first (Chrome, Safari, Edge); MediaRecorder +
+      Gemini audio transcription (`POST /api/interpreter/transcribe`) as the fallback.
+- [x] Translation: `POST /api/interpreter/translate` through the same provider abstraction as
+      the receptionist (Gemini default, Claude optional) with a nail-salon glossary and
+      Vietnamese salon register (chị/anh/em).
+- [x] Text-to-speech: device voices via `speechSynthesis`, best available voice per
+      language, per-message replay, mute toggle.
+- [x] Quick phrases bar (tap = instant, no model call) + `/app/[slug]/interpreter/phrases`
+      to manage the salon's own phrases.
+- [x] History: `/app/[slug]/interpreter/history` and transcript pages; link a conversation
+      to a customer profile; delete.
+- Later (Phase 6): hosted natural Vietnamese TTS voices, streaming translation, offline
+      phrase packs.
 
 ## Phase 4 — Automation (2 weeks)
 
