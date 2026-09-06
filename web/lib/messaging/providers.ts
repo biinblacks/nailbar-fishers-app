@@ -32,13 +32,21 @@ export function emailConfigured(): boolean {
   return dryRun() || !!(process.env.RESEND_API_KEY && process.env.EMAIL_FROM);
 }
 
-/** Twilio Programmable SMS through its REST API (no SDK needed). */
-export async function sendSms(to: string, body: string): Promise<SendResult> {
+/**
+ * Twilio Programmable SMS through its REST API (no SDK needed).
+ * `from` overrides the account default so each salon can own a number.
+ */
+export async function sendSms(to: string, body: string, from?: string | null): Promise<SendResult> {
   if (dryRun()) return { provider: "dry-run", providerMessageId: null };
   const sid = process.env.TWILIO_ACCOUNT_SID;
   const token = process.env.TWILIO_AUTH_TOKEN;
-  const from = process.env.TWILIO_FROM_NUMBER;
-  if (!sid || !token || !from) throw new MessagingNotConfigured("SMS is not configured (TWILIO_* env vars).");
+  const sender = from || process.env.TWILIO_FROM_NUMBER;
+  if (!sid || !token || !sender) throw new MessagingNotConfigured("SMS is not configured (TWILIO_* env vars).");
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  const params: Record<string, string> = { To: to, From: sender, Body: body };
+  // Delivery receipts come back to this endpoint and update message_log.
+  if (siteUrl?.startsWith("https://")) params.StatusCallback = `${siteUrl}/api/webhooks/twilio/status`;
 
   const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`, {
     method: "POST",
@@ -46,7 +54,7 @@ export async function sendSms(to: string, body: string): Promise<SendResult> {
       Authorization: `Basic ${Buffer.from(`${sid}:${token}`).toString("base64")}`,
       "Content-Type": "application/x-www-form-urlencoded",
     },
-    body: new URLSearchParams({ To: to, From: from, Body: body }).toString(),
+    body: new URLSearchParams(params).toString(),
   });
   const data = (await res.json().catch(() => ({}))) as { sid?: string; message?: string };
   if (!res.ok) throw new Error(`Twilio ${res.status}: ${data.message ?? "send failed"}`);

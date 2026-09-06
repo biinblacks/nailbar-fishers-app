@@ -30,6 +30,20 @@ export function ReceptionistSettingsForm({ salon, canEdit }: { salon: PublicSalo
         </div>
 
         <div className="space-y-3">
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-blush-800/60">Text messaging</h3>
+          <Input
+            label="Your salon's SMS number (optional)"
+            name="sms_number"
+            type="tel"
+            defaultValue={salon.sms_number ?? ""}
+            placeholder="+13175550182"
+            hint="The Twilio number guests text. Incoming texts land in your Inbox."
+            error={fe.sms_number}
+          />
+          <Checkbox label="Let the AI answer incoming texts automatically" name="sms_ai_autoreply" defaultChecked={salon.sms_ai_autoreply} />
+        </div>
+
+        <div className="space-y-3">
           <h3 className="text-sm font-semibold uppercase tracking-wide text-blush-800/60">Online booking rules</h3>
           <Checkbox label="Accept online bookings" name="online_booking_enabled" defaultChecked={salon.online_booking_enabled} />
           <div className="grid gap-4 sm:grid-cols-2">

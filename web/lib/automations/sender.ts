@@ -34,7 +34,7 @@ export async function sendDueJobs(db: Db, now: Date, siteUrl: string, salonId?: 
   let query = db
     .from("automation_jobs")
     .select(
-      "*, automation_rules(is_enabled, template_en, template_vi, send_hour_start, send_hour_end), customers(full_name, phone, email, marketing_opt_in), appointments(appointment_date, appointment_time, services(name), staff(full_name)), salons(name, slug, phone, timezone, google_review_link, is_active)"
+      "*, automation_rules(is_enabled, template_en, template_vi, send_hour_start, send_hour_end), customers(full_name, phone, email, marketing_opt_in), appointments(appointment_date, appointment_time, services(name), staff(full_name)), salons(name, slug, phone, timezone, google_review_link, is_active, sms_number)"
     )
     .eq("status", "pending")
     .lte("scheduled_for", now.toISOString())
@@ -117,7 +117,7 @@ export async function sendDueJobs(db: Db, now: Date, siteUrl: string, salonId?: 
     const subject = `${SUBJECTS[job.type]?.[language] ?? "Message"} · ${salon.name}`;
 
     try {
-      const result = job.channel === "sms" ? await sendSms(recipient, body) : await sendEmail(recipient, subject, body);
+      const result = job.channel === "sms" ? await sendSms(recipient, body, salon.sms_number) : await sendEmail(recipient, subject, body);
       await db.from("message_log").insert({
         salon_id: job.salon_id,
         job_id: job.id,

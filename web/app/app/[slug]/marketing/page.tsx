@@ -10,6 +10,8 @@ import { Badge } from "@/components/ui/Badge";
 import { LinkButton } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { CopyButton, MetaConnectForm, SchedulePostForm } from "@/components/forms/MarketingForms";
+import { ConnectWithFacebookButton, PageSwitcher } from "@/components/forms/MetaConnection";
+import { metaConfigured } from "@/lib/marketing/meta-oauth";
 import { ConfirmButton } from "@/components/forms/ConfirmButton";
 
 export const metadata: Metadata = { title: "Marketing" };
@@ -23,8 +25,15 @@ const POST_STATUS: Record<string, string> = {
   cancelled: "border-gray-200 bg-gray-100 text-gray-500",
 };
 
-export default async function MarketingPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function MarketingPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ connected?: string; error?: string }>;
+}) {
   const { slug } = await params;
+  const { connected, error: connectError } = await searchParams;
   const { salon, role } = await requireSalonAccess(slug);
   const supabase = await createClient();
   const canEdit = canManageSalon(role);
@@ -32,7 +41,7 @@ export default async function MarketingPage({ params }: { params: Promise<{ slug
   const [campaignsRes, postsRes, metaRes, favRes] = await Promise.all([
     supabase.from("campaigns").select("id, name, goal, platforms, languages, status, created_at").eq("salon_id", salon.id).neq("status", "archived").order("created_at", { ascending: false }).limit(50),
     supabase.from("scheduled_posts").select("id, platform, content, scheduled_for, status, publish_mode, error, external_id").eq("salon_id", salon.id).in("status", ["scheduled", "ready", "failed"]).order("scheduled_for").limit(50),
-    canEdit ? supabase.from("salon_integrations").select("external_id, display_name, instagram_account_id, updated_at").eq("salon_id", salon.id).eq("provider", "meta").maybeSingle() : Promise.resolve({ data: null }),
+    canEdit ? supabase.from("salon_integrations").select("external_id, display_name, instagram_account_id, updated_at, connected_via").eq("salon_id", salon.id).eq("provider", "meta").maybeSingle() : Promise.resolve({ data: null }),
     supabase.from("campaign_assets").select("id, kind, language, content").eq("salon_id", salon.id).eq("is_favorite", true).in("kind", ["caption", "promo"]).order("updated_at", { ascending: false }).limit(20),
   ]);
   const campaigns = campaignsRes.data ?? [];
@@ -48,6 +57,9 @@ export default async function MarketingPage({ params }: { params: Promise<{ slug
         description="Generate captions, promotions, image and video prompts in English and Vietnamese, then schedule posts."
         actions={canEdit ? <LinkButton href={`/app/${slug}/marketing/new`}>New campaign</LinkButton> : undefined}
       />
+
+      {connected && <p className="rounded-2xl border border-green-100 bg-green-50 px-4 py-3 text-sm text-green-700">{connected}</p>}
+      {connectError && <p className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">{connectError}</p>}
 
       {readyPosts.length > 0 && (
         <Card className="border-2 border-blush-300">
@@ -109,7 +121,11 @@ export default async function MarketingPage({ params }: { params: Promise<{ slug
                 <p className="text-blush-900">
                   Facebook Page: <strong>{meta.display_name ?? meta.external_id}</strong>
                 </p>
-                <p className="text-xs text-blush-800/60">Instagram: {meta.instagram_account_id ? "linked" : "not linked"} · updated {new Date(meta.updated_at).toLocaleDateString("en-US")}</p>
+                <p className="text-xs text-blush-800/60">
+                  Instagram: {meta.instagram_account_id ? "linked" : "not linked"} · {meta.connected_via === "oauth" ? "connected with Facebook login" : "connected with a pasted token"} · updated{" "}
+                  {new Date(meta.updated_at).toLocaleDateString("en-US")}
+                </p>
+                {meta.connected_via === "oauth" && <PageSwitcher slug={slug} currentId={meta.external_id} />}
                 <ConfirmButton action={disconnectMetaAction} hidden={{ slug }} confirmText="Disconnect the Facebook Page? Scheduled auto posts will fail." variant="secondary" className="!px-3 !py-1 text-xs">
                   Disconnect
                 </ConfirmButton>
@@ -118,8 +134,14 @@ export default async function MarketingPage({ params }: { params: Promise<{ slug
               <>
                 <p className="mt-1 text-xs text-blush-800/60">Connect a Facebook Page to auto-publish. Without it, scheduled posts show up here as reminders.</p>
                 <div className="mt-3">
-                  <MetaConnectForm slug={slug} />
+                  <ConnectWithFacebookButton slug={slug} configured={metaConfigured()} />
                 </div>
+                <details className="mt-3">
+                  <summary className="cursor-pointer text-xs text-blush-500">Or paste a Page token manually</summary>
+                  <div className="mt-3">
+                    <MetaConnectForm slug={slug} />
+                  </div>
+                </details>
               </>
             )}
           </Card>

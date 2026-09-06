@@ -18,6 +18,11 @@ const settingsSchema = z.object({
   booking_lead_minutes: z.number().int().min(0).max(10080),
   booking_window_days: z.number().int().min(1).max(365),
   booking_buffer_minutes: z.number().int().min(0).max(120),
+  sms_number: z
+    .string()
+    .regex(/^\+[1-9]\d{7,14}$/, "Use the full number in E.164 form, e.g. +13175550182")
+    .nullable(),
+  sms_ai_autoreply: z.boolean(),
 });
 
 export async function saveReceptionistSettingsAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -34,6 +39,8 @@ export async function saveReceptionistSettingsAction(_prev: ActionState, formDat
     booking_lead_minutes: num(formData, "booking_lead_minutes") ?? 60,
     booking_window_days: num(formData, "booking_window_days") ?? 60,
     booking_buffer_minutes: num(formData, "booking_buffer_minutes") ?? 0,
+    sms_number: optionalStr(formData, "sms_number"),
+    sms_ai_autoreply: bool(formData, "sms_ai_autoreply"),
   });
   if (!parsed.success) return fromZodError(parsed.error);
 

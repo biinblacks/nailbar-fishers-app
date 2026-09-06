@@ -45,9 +45,10 @@ Run in the SQL editor, in order:
 6. `supabase/migrations/0005_automations.sql` (automation rules, job queue, message log)
 7. `supabase/migrations/0006_marketing.sql` (campaigns, assets, scheduled posts, Meta connection)
 8. `supabase/migrations/0007_billing_and_hardening.sql` (Stripe subscriptions, audit log, custom domains, usage)
-9. `supabase/seed.sql` (optional demo salon `nail-bar`)
+9. `supabase/migrations/0008_delivery_and_inbound.sql` (delivery receipts, inbound SMS, OAuth state)
+10. `supabase/seed.sql` (optional demo salon `nail-bar`)
 
-Upgrading an existing install: run steps 2–8 only. After changing the schema, regenerate
+Upgrading an existing install: run steps 2–9 only. After changing the schema, regenerate
 `web/lib/database.types.ts` (see `web/scripts/gen-types.md`). It creates the `nail-bar` salon from your
 current `salon_profile` row, backfills `salon_id` everywhere, and turns every `admin_users`
 row into an **owner** of that salon. It is idempotent.
@@ -189,16 +190,30 @@ every 15 minutes.
   generations per month.
 - Audit log (Billing page), security headers, optional Upstash Redis rate limiting,
   custom domains (`salons.custom_domain` → add the domain to Vercel, the middleware
-  rewrites it to `/s/<slug>`), Vitest unit tests (`npm test`), GitHub Actions CI.
+  rewrites it to `/s/<slug>`).
+- Tests: `npm test` (Vitest unit tests) and `npm run test:e2e` (Playwright smoke tests in
+  Chromium against a real build). Both run in GitHub Actions on every push and PR.
 
-## 11. Deployment
+## 11. Texting both ways
+
+Set the salon's Twilio number in Dashboard → AI Receptionist → Text messaging, then in the
+Twilio console point that number's incoming-message webhook at
+`https://<your-domain>/api/webhooks/twilio/inbound`. Guests who text you appear in the
+Inbox flagged for a human, and staff reply by text from the conversation thread. Turn on
+"Let the AI answer incoming texts" if you want the receptionist to reply first.
+
+Delivery receipts: Twilio status callbacks are attached automatically; for email add a
+Resend webhook pointing at `/api/webhooks/resend` and set `RESEND_WEBHOOK_SECRET`. Both
+endpoints verify signatures and update the message log with delivered/failed status.
+
+## 12. Deployment
 
 - **web** → Vercel, root directory `web`, framework Next.js, env vars from `web/.env.example`.
 - **client** → Vercel, root directory `client` (unchanged), plus `VITE_SALON_SLUG`.
 - **server** → Render/Railway/Fly, root `server`, `npm run build` / `npm start`, add
   `DEFAULT_SALON_SLUG`.
 
-## 12. Security notes
+## 13. Security notes
 
 - Service role key is used only by `server/` (never in `web/` or `client/`).
 - Anonymous access is read-only and limited to active storefront content; chat transcripts,

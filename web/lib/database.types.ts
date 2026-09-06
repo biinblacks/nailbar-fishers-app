@@ -530,6 +530,7 @@ export type Database = {
       chat_conversations: {
         Row: {
           channel: string
+          contact_number: string | null
           created_at: string
           customer_id: string | null
           customer_name: string | null
@@ -546,6 +547,7 @@ export type Database = {
         }
         Insert: {
           channel?: string
+          contact_number?: string | null
           created_at?: string
           customer_id?: string | null
           customer_name?: string | null
@@ -562,6 +564,7 @@ export type Database = {
         }
         Update: {
           channel?: string
+          contact_number?: string | null
           created_at?: string
           customer_id?: string | null
           customer_name?: string | null
@@ -595,25 +598,31 @@ export type Database = {
       }
       chat_messages: {
         Row: {
+          channel: string
           content: string
           conversation_id: string
           created_at: string
           id: string
           role: Database["public"]["Enums"]["chat_role"]
+          sent_by: string | null
         }
         Insert: {
+          channel?: string
           content: string
           conversation_id: string
           created_at?: string
           id?: string
           role: Database["public"]["Enums"]["chat_role"]
+          sent_by?: string | null
         }
         Update: {
+          channel?: string
           content?: string
           conversation_id?: string
           created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["chat_role"]
+          sent_by?: string | null
         }
         Relationships: [
           {
@@ -842,11 +851,15 @@ export type Database = {
           channel: Database["public"]["Enums"]["message_channel"]
           created_at: string
           customer_id: string | null
+          delivered_at: string | null
+          direction: string
           error: string | null
+          failed_at: string | null
           id: string
           job_id: string | null
           provider: string
           provider_message_id: string | null
+          provider_status: string | null
           recipient: string
           salon_id: string
           status: string
@@ -857,11 +870,15 @@ export type Database = {
           channel: Database["public"]["Enums"]["message_channel"]
           created_at?: string
           customer_id?: string | null
+          delivered_at?: string | null
+          direction?: string
           error?: string | null
+          failed_at?: string | null
           id?: string
           job_id?: string | null
           provider: string
           provider_message_id?: string | null
+          provider_status?: string | null
           recipient: string
           salon_id: string
           status: string
@@ -872,11 +889,15 @@ export type Database = {
           channel?: Database["public"]["Enums"]["message_channel"]
           created_at?: string
           customer_id?: string | null
+          delivered_at?: string | null
+          direction?: string
           error?: string | null
+          failed_at?: string | null
           id?: string
           job_id?: string | null
           provider?: string
           provider_message_id?: string | null
+          provider_status?: string | null
           recipient?: string
           salon_id?: string
           status?: string
@@ -899,6 +920,44 @@ export type Database = {
           },
           {
             foreignKeyName: "message_log_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      oauth_states: {
+        Row: {
+          created_at: string
+          expires_at: string
+          provider: string
+          redirect_to: string | null
+          salon_id: string
+          state: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          provider: string
+          redirect_to?: string | null
+          salon_id: string
+          state: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          provider?: string
+          redirect_to?: string | null
+          salon_id?: string
+          state?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "oauth_states_salon_id_fkey"
             columns: ["salon_id"]
             isOneToOne: false
             referencedRelation: "salons"
@@ -1060,6 +1119,7 @@ export type Database = {
         Row: {
           access_token: string
           connected_by: string | null
+          connected_via: string
           created_at: string
           display_name: string | null
           expires_at: string | null
@@ -1067,11 +1127,14 @@ export type Database = {
           instagram_account_id: string | null
           provider: string
           salon_id: string
+          scopes: string[] | null
           updated_at: string
+          user_access_token: string | null
         }
         Insert: {
           access_token: string
           connected_by?: string | null
+          connected_via?: string
           created_at?: string
           display_name?: string | null
           expires_at?: string | null
@@ -1079,11 +1142,14 @@ export type Database = {
           instagram_account_id?: string | null
           provider: string
           salon_id: string
+          scopes?: string[] | null
           updated_at?: string
+          user_access_token?: string | null
         }
         Update: {
           access_token?: string
           connected_by?: string | null
+          connected_via?: string
           created_at?: string
           display_name?: string | null
           expires_at?: string | null
@@ -1091,7 +1157,9 @@ export type Database = {
           instagram_account_id?: string | null
           provider?: string
           salon_id?: string
+          scopes?: string[] | null
           updated_at?: string
+          user_access_token?: string | null
         }
         Relationships: [
           {
@@ -1357,6 +1425,8 @@ export type Database = {
           phone: string | null
           plan: string
           slug: string
+          sms_ai_autoreply: boolean
+          sms_number: string | null
           timezone: string
           updated_at: string
         }
@@ -1386,6 +1456,8 @@ export type Database = {
           phone?: string | null
           plan?: string
           slug: string
+          sms_ai_autoreply?: boolean
+          sms_number?: string | null
           timezone?: string
           updated_at?: string
         }
@@ -1415,6 +1487,8 @@ export type Database = {
           phone?: string | null
           plan?: string
           slug?: string
+          sms_ai_autoreply?: boolean
+          sms_number?: string | null
           timezone?: string
           updated_at?: string
         }
@@ -1692,6 +1766,8 @@ export type Database = {
           phone: string | null
           plan: string
           slug: string
+          sms_ai_autoreply: boolean
+          sms_number: string | null
           timezone: string
           updated_at: string
         }
@@ -1737,6 +1813,8 @@ export type Database = {
           phone: string | null
           plan: string
           slug: string
+          sms_ai_autoreply: boolean
+          sms_number: string | null
           timezone: string
           updated_at: string
         }

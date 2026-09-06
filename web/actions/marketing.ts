@@ -10,6 +10,8 @@ import { TONES } from "@/lib/marketing/tones";
 import { checkLimit } from "@/lib/billing/limits";
 import { logAudit } from "@/lib/audit";
 import { zonedToUtc } from "@/lib/time";
+import { listPages } from "@/lib/marketing/meta-oauth";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { friendlyDbError, fromZodError, optionalStr, str, type ActionState } from "@/lib/action-state";
 
 const briefSchema = z.object({
@@ -270,4 +272,64 @@ export async function disconnectMetaAction(formData: FormData): Promise<void> {
   await supabase.from("salon_integrations").delete().eq("salon_id", salon.id).eq("provider", "meta");
   await logAudit({ salonId: salon.id, userId, action: "integration.disconnect", entity: "meta" });
   revalidatePath(`/app/${slug}/marketing`);
+}
+
+/** Lists the Pages available on an OAuth connection (owners/admins only). */
+export async function listConnectedPagesAction(slug: string): Promise<Array<{ id: string; name: string }> | { error: string }> {
+  const { salon, role } = await requireSalonAccess(slug);
+  if (!canManageSalon(role)) return { error: "Not allowed." };
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("salon_integrations")
+    .select("user_access_token")
+    .eq("salon_id", salon.id)
+    .eq("provider", "meta")
+    .maybeSingle();
+  if (!data?.user_access_token) return { error: "This connection has no Facebook login attached." };
+  try {
+    const pages = await listPages(data.user_access_token);
+    return pages.map((p) => ({ id: p.id, name: p.name }));
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Could not load Pages." };
+  }
+}
+
+/** Switches which Facebook Page a salon posts to. */
+export async function switchMetaPageAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const slug = str(formData, "slug");
+  const pageId = str(formData, "page_id");
+  const { salon, role, userId } = await requireSalonAccess(slug);
+  if (!canManageSalon(role)) return { error: "Only owners and admins can change the connected Page." };
+
+  const supabase = await createClient();
+  const { data: integration } = await supabase
+    .from("salon_integrations")
+    .select("user_access_token")
+    .eq("salon_id", salon.id)
+    .eq("provider", "meta")
+    .maybeSingle();
+  if (!integration?.user_access_token) return { error: "Reconnect Facebook first." };
+
+  try {
+    const pages = await listPages(integration.user_access_token);
+    const page = pages.find((p) => p.id === pageId);
+    if (!page) return { error: "That Page is no longer available on your Facebook account." };
+    // Page tokens are secrets: write them with the service role, not the user session.
+    const { error } = await createAdminClient()
+      .from("salon_integrations")
+      .update({
+        external_id: page.id,
+        display_name: page.name,
+        access_token: page.access_token,
+        instagram_account_id: page.instagram_business_account?.id ?? null,
+      })
+      .eq("salon_id", salon.id)
+      .eq("provider", "meta");
+    if (error) return { error: friendlyDbError(error.message) };
+    await logAudit({ salonId: salon.id, userId, action: "integration.switch_page", entity: "meta", entityId: page.id });
+    revalidatePath(`/app/${slug}/marketing`);
+    return { success: `Now posting to ${page.name}.` };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Could not switch Pages." };
+  }
 }

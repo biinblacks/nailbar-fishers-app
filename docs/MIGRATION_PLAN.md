@@ -151,6 +151,20 @@ Built new — no prior code existed.
       rate limiting when configured (in-memory fallback), custom domains rewritten to
       `/s/[slug]` in middleware, Vitest unit tests (`web/tests`), GitHub Actions CI
       (typecheck, lint, tests, builds).
-- [ ] Still to do: Playwright smoke tests against a Supabase branch, Twilio/Resend delivery
-      webhooks, two-way SMS into the inbox, backups policy documentation for the Supabase
-      project, retiring `client/` + `server/` after cut-over.
+- [x] Delivery receipts: `supabase/migrations/0008_delivery_and_inbound.sql` adds
+      `provider_status` / `delivered_at` / `failed_at` / `direction` to `message_log`;
+      `/api/webhooks/twilio/status` (HMAC-SHA1 request validation) and
+      `/api/webhooks/resend` (Svix signature + replay window) update it, and outgoing SMS
+      now carry a `StatusCallback`.
+- [x] Two-way SMS: `salons.sms_number` routes inbound texts,
+      `/api/webhooks/twilio/inbound` opens or reuses an SMS conversation, links the
+      customer by phone, flags it for a human, and optionally lets the AI answer
+      (`salons.sms_ai_autoreply`). Staff reply by text straight from the inbox thread.
+- [x] Meta OAuth: `/api/integrations/meta/start` and `/callback` exchange the code for a
+      long-lived token, store the Page token, and let owners switch Pages. Pasting a token
+      by hand still works when no Facebook app is configured.
+- [x] Playwright smoke tests (`web/e2e`): public pages, the auth boundary, security
+      headers and public API guards, run in Chromium against a real build; wired into CI
+      with a report artifact on failure.
+- [ ] Still to do: signed-in end-to-end journeys against a Supabase branch, backups policy
+      for the Supabase project, retiring `client/` + `server/` after cut-over.

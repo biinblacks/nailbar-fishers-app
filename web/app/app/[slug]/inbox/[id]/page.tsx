@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 import { requireSalonAccess } from "@/lib/salon";
 import { formatDate, formatTime } from "@/lib/format";
 import { setConversationFlagsAction } from "@/actions/inbox";
+import { smsConfigured } from "@/lib/messaging/providers";
+import { ConversationReplyForm } from "@/components/forms/ConversationReplyForm";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -30,13 +32,15 @@ export default async function ConversationPage({ params }: { params: Promise<{ s
   const conv = convRes.data as {
     customer_name: string | null;
     customer_phone: string | null;
+    contact_number: string | null;
     customer_id: string | null;
     needs_human: boolean;
     resolved_at: string | null;
     channel: string;
     created_at: string;
   };
-  const messages = (msgRes.data ?? []) as Array<{ id: string; role: string; content: string; created_at: string }>;
+  const replyTo = conv.contact_number ?? conv.customer_phone;
+  const messages = (msgRes.data ?? []) as Array<{ id: string; role: string; content: string; created_at: string; sent_by: string | null; channel: string }>;
   const appointments = (apptRes.data ?? []) as unknown as Array<{ id: string; appointment_date: string; appointment_time: string; status: string; services: { name: string } | null }>;
 
   return (
@@ -110,12 +114,16 @@ export default async function ConversationPage({ params }: { params: Promise<{ s
               <div className={`max-w-[85%] rounded-2xl px-4 py-2 text-sm ${m.role === "user" ? "bg-blush-500 text-white" : "bg-blush-50 text-blush-900"}`}>
                 <p className="whitespace-pre-wrap">{m.content}</p>
                 <p className={`mt-1 text-[10px] ${m.role === "user" ? "text-white/70" : "text-blush-800/50"}`}>
+                  {m.role === "assistant" && (m.sent_by ? "Staff · " : "AI · ")}
                   {new Date(m.created_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}
                 </p>
               </div>
             </div>
           ))}
           {messages.length === 0 && <p className="text-sm text-blush-800/60">No messages.</p>}
+        </div>
+        <div className="mt-6 border-t border-blush-50 pt-5">
+          <ConversationReplyForm slug={slug} id={id} to={replyTo} smsReady={smsConfigured()} />
         </div>
       </Card>
     </div>
