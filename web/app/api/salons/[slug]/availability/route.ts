@@ -13,7 +13,7 @@ const UUID_RE = /^[0-9a-f-]{36}$/i;
 
 // GET /api/salons/:slug/availability?date=YYYY-MM-DD&service=<uuid>&staff=<uuid>
 export async function GET(request: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
-  const limit = rateLimit(`avail:${clientIp(request.headers)}`, 120, 60_000);
+  const limit = await rateLimit(`avail:${clientIp(request.headers)}`, 120, 60_000);
   if (!limit.ok) return NextResponse.json({ error: "Too many requests" }, { status: 429 });
 
   const { slug } = await params;

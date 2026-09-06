@@ -4,6 +4,7 @@ import { getPublicSalon } from "@/lib/storefront";
 import { generateReceptionistReply } from "@/lib/ai/receptionist";
 import { isAiConfigured } from "@/lib/ai";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
+import { checkLimit } from "@/lib/billing/limits";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,7 +20,7 @@ const bodySchema = z.object({
 // iframe embed. Anonymous; abuse-limited per IP and per session.
 export async function POST(request: NextRequest) {
   const ip = clientIp(request.headers);
-  const perIp = rateLimit(`chat:ip:${ip}`, 30, 60_000);
+  const perIp = await rateLimit(`chat:ip:${ip}`, 30, 60_000);
   if (!perIp.ok) {
     return NextResponse.json({ error: "Too many messages. Please slow down." }, { status: 429, headers: { "Retry-After": String(perIp.retryAfterSeconds) } });
   }
@@ -31,7 +32,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 
-  const perSession = rateLimit(`chat:session:${body.sessionId}`, 200, 24 * 60 * 60_000);
+  const perSession = await rateLimit(`chat:session:${body.sessionId}`, 200, 24 * 60 * 60_000);
   if (!perSession.ok) {
     return NextResponse.json({ error: "This chat has reached its daily limit. Please call the salon." }, { status: 429 });
   }
@@ -40,6 +41,16 @@ export async function POST(request: NextRequest) {
   if (!salon) return NextResponse.json({ error: "Salon not found" }, { status: 404 });
   if (!salon.ai_enabled || !isAiConfigured()) {
     return NextResponse.json({ error: "The AI receptionist is not available right now." }, { status: 503 });
+  }
+
+  const quota = await checkLimit(salon.id, "ai_messages");
+  if (!quota.allowed) {
+    return NextResponse.json({
+      sessionId: body.sessionId,
+      reply: `Our virtual receptionist is taking a short break. Please call us${salon.phone ? ` at ${salon.phone}` : ""} and we'll be happy to help.`,
+      needsHuman: true,
+      limitReached: true,
+    });
   }
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? request.nextUrl.origin;

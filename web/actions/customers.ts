@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireSalonAccess } from "@/lib/salon";
 import { customerSchema } from "@/lib/validation";
+import { logAudit } from "@/lib/audit";
 import {
   bool,
   friendlyDbError,
@@ -72,12 +73,13 @@ export async function updateCustomerAction(_prev: ActionState, formData: FormDat
 export async function deleteCustomerAction(formData: FormData): Promise<void> {
   const slug = str(formData, "slug");
   const id = str(formData, "id");
-  const { salon } = await requireSalonAccess(slug);
+  const { salon, userId } = await requireSalonAccess(slug);
 
   const supabase = await createClient();
   // appointments.customer_id is ON DELETE SET NULL; the name/phone snapshot on
   // each appointment keeps the calendar readable.
   await supabase.from("customers").delete().eq("id", id).eq("salon_id", salon.id);
+  await logAudit({ salonId: salon.id, userId, action: "customer.delete", entity: "customer", entityId: id });
   revalidatePath(`/app/${slug}/customers`);
   redirect(`/app/${slug}/customers`);
 }

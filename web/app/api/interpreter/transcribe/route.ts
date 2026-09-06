@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
   if (!access) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!isTranscriptionAvailable()) return NextResponse.json({ error: "Server transcription is not configured" }, { status: 503 });
 
-  const limit = rateLimit(`transcribe:${access.userId}`, 60, 60_000);
+  const limit = await rateLimit(`transcribe:${access.userId}`, 60, 60_000);
   if (!limit.ok) return NextResponse.json({ error: "Too many recordings per minute" }, { status: 429 });
 
   try {

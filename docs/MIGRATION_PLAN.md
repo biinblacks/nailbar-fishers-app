@@ -117,17 +117,40 @@ Built new — no prior code existed.
 - Later (Phase 6): per-salon sending numbers, two-way SMS replies into the inbox,
       delivery webhooks from Twilio/Resend.
 
-## Phase 5 — AI Marketing (2 weeks)
+## Phase 5 — AI Marketing (this branch) ✅
 
-- `campaigns`, `campaign_assets`, `scheduled_posts` tables.
-- Generator at `/app/[slug]/marketing`: Facebook/Instagram captions, promotion copy,
-  image/video prompts, using salon profile + services + promotions as context; EN/VI output.
-- Scheduling architecture: `scheduled_posts` + cron publisher with provider adapters (Meta
-  Graph API first); manual "copy & post" mode until the Meta app review is done.
+- [x] `supabase/migrations/0006_marketing.sql`: `campaigns`, `campaign_assets` (versioned
+      generations, favorites), `scheduled_posts` (auto/manual, retries), `salon_integrations`
+      (Facebook Page token, owners/admins only), membership RLS.
+- [x] Generator `web/lib/marketing/generate.ts`: one brief → strict-JSON content pack per
+      language (3 captions, promo copy, hashtags, SMS, email subject+body) plus image and
+      video prompts, using salon menu/promotions as grounding; same provider abstraction as
+      the receptionist.
+- [x] Dashboard `/app/[slug]/marketing`: campaigns, regenerate rounds, inline edit, favorites,
+      copy buttons, schedule posts (salon timezone), "ready to post" reminders, Facebook Page
+      connection.
+- [x] Publisher `web/lib/marketing/publisher.ts` + `/api/cron/publish` (every 15 min):
+      Facebook feed/photo posts and Instagram image posts through the Meta Graph API when a
+      Page is connected; manual posts flip to "ready" for copy-and-post.
+- Later: OAuth-based Meta login instead of pasting a token; TikTok publishing; AI image
+      generation from the image prompt.
 
-## Phase 6 — SaaS hardening (ongoing)
+## Phase 6 — SaaS hardening (this branch) ✅ first pass
 
-- Stripe subscriptions (`plan` on `salons`), plan limits (staff count, SMS credits).
-- Custom domains per salon, Supabase Storage for images, audit log, backups policy.
-- Tests: Vitest for actions/validation, Playwright smoke tests for booking + auth; CI on PRs.
-- Retire `client/` and `server/` once every route has a Next.js equivalent in production.
+- [x] `supabase/migrations/0007_billing_and_hardening.sql`: `salon_subscriptions` mirrored
+      from Stripe (trigger keeps `salons.plan` in sync), 14-day trial rows for every salon,
+      `audit_log`, `salons.custom_domain`, `salon_monthly_usage()`.
+- [x] Billing: plan catalogue (`web/lib/billing/plans.ts` — Starter free, Pro $79, Premium
+      $149 with limits), Stripe Checkout + Customer Portal, webhook at `/api/webhooks/stripe`,
+      `/app/[slug]/billing` with usage meters and plan cards.
+- [x] Plan limits enforced: active technicians (staff create), AI receptionist replies
+      (chat API answers with a polite fallback), SMS per month (sender skips), marketing
+      generations per month.
+- [x] Hardening: audit log on settings/team/customer-delete/billing/integrations, security
+      headers (frame-deny except the chat embed, HSTS, referrer, permissions), Upstash Redis
+      rate limiting when configured (in-memory fallback), custom domains rewritten to
+      `/s/[slug]` in middleware, Vitest unit tests (`web/tests`), GitHub Actions CI
+      (typecheck, lint, tests, builds).
+- [ ] Still to do: Playwright smoke tests against a Supabase branch, Twilio/Resend delivery
+      webhooks, two-way SMS into the inbox, backups policy documentation for the Supabase
+      project, retiring `client/` + `server/` after cut-over.

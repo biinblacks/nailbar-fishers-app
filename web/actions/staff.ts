@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireSalonAccess } from "@/lib/salon";
 import { staffSchema } from "@/lib/validation";
+import { checkLimit } from "@/lib/billing/limits";
 import {
   bool,
   friendlyDbError,
@@ -33,6 +34,11 @@ export async function createStaffAction(_prev: ActionState, formData: FormData):
   const { salon } = await requireSalonAccess(slug);
   const parsed = parseStaff(formData);
   if (!parsed.success) return fromZodError(parsed.error);
+
+  const limit = await checkLimit(salon.id, "staff");
+  if (!limit.allowed && parsed.data.is_active) {
+    return { error: `Your ${limit.planName} plan includes ${limit.limit} active technicians. Deactivate one or upgrade in Billing.` };
+  }
 
   const supabase = await createClient();
   const { error } = await supabase.from("staff").insert({ ...parsed.data, salon_id: salon.id });

@@ -4,6 +4,7 @@ import type { Database } from "@/lib/database.types";
 import { clampToSendWindow } from "@/lib/time";
 import { renderTemplate } from "@/lib/messaging/templates";
 import { MessagingNotConfigured, sendEmail, sendSms, toE164 } from "@/lib/messaging/providers";
+import { checkLimit } from "@/lib/billing/limits";
 
 type Db = SupabaseClient<Database>;
 
@@ -44,6 +45,8 @@ export async function sendDueJobs(db: Db, now: Date, siteUrl: string, salonId?: 
   const { data: jobs, error } = await query;
   if (error) throw new Error(`load jobs failed: ${error.message}`);
 
+  const smsQuota = new Map<string, boolean>();
+
   for (const job of jobs ?? []) {
     const rule = job.automation_rules;
     const salon = job.salons;
@@ -83,6 +86,15 @@ export async function sendDueJobs(db: Db, now: Date, siteUrl: string, salonId?: 
       await finish("skipped", { last_error: `no ${job.channel} address` });
       summary.skipped++;
       continue;
+    }
+
+    if (job.channel === "sms") {
+      if (!smsQuota.has(job.salon_id)) smsQuota.set(job.salon_id, (await checkLimit(job.salon_id, "sms")).allowed);
+      if (!smsQuota.get(job.salon_id)) {
+        await finish("skipped", { last_error: "plan SMS limit reached this month" });
+        summary.skipped++;
+        continue;
+      }
     }
 
     const language = job.language === "vi" ? "vi" : "en";

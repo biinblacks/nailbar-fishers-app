@@ -173,6 +173,47 @@ export type Database = {
           },
         ]
       }
+      audit_log: {
+        Row: {
+          action: string
+          created_at: string
+          entity: string | null
+          entity_id: string | null
+          id: number
+          meta: NonNullable<Json>
+          salon_id: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          entity?: string | null
+          entity_id?: string | null
+          id?: never
+          meta?: NonNullable<Json>
+          salon_id: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          entity?: string | null
+          entity_id?: string | null
+          id?: never
+          meta?: NonNullable<Json>
+          salon_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_log_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       automation_jobs: {
         Row: {
           appointment_id: string | null
@@ -349,6 +390,136 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "business_hours_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaign_assets: {
+        Row: {
+          campaign_id: string
+          content: string
+          created_at: string
+          generation: number
+          id: string
+          is_favorite: boolean
+          kind: Database["public"]["Enums"]["asset_kind"]
+          language: string
+          salon_id: string
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          campaign_id: string
+          content: string
+          created_at?: string
+          generation?: number
+          id?: string
+          is_favorite?: boolean
+          kind: Database["public"]["Enums"]["asset_kind"]
+          language?: string
+          salon_id: string
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          campaign_id?: string
+          content?: string
+          created_at?: string
+          generation?: number
+          id?: string
+          is_favorite?: boolean
+          kind?: Database["public"]["Enums"]["asset_kind"]
+          language?: string
+          salon_id?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_assets_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_assets_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaigns: {
+        Row: {
+          brief: string | null
+          created_at: string
+          created_by: string | null
+          focus_service_id: string | null
+          goal: string
+          id: string
+          languages: string[]
+          name: string
+          platforms: string[]
+          promotion_id: string | null
+          salon_id: string
+          status: Database["public"]["Enums"]["campaign_status"]
+          tone: string
+          updated_at: string
+        }
+        Insert: {
+          brief?: string | null
+          created_at?: string
+          created_by?: string | null
+          focus_service_id?: string | null
+          goal: string
+          id?: string
+          languages?: string[]
+          name: string
+          platforms?: string[]
+          promotion_id?: string | null
+          salon_id: string
+          status?: Database["public"]["Enums"]["campaign_status"]
+          tone?: string
+          updated_at?: string
+        }
+        Update: {
+          brief?: string | null
+          created_at?: string
+          created_by?: string | null
+          focus_service_id?: string | null
+          goal?: string
+          id?: string
+          languages?: string[]
+          name?: string
+          platforms?: string[]
+          promotion_id?: string | null
+          salon_id?: string
+          status?: Database["public"]["Enums"]["campaign_status"]
+          tone?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaigns_focus_service_id_fkey"
+            columns: ["focus_service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaigns_promotion_id_fkey"
+            columns: ["promotion_id"]
+            isOneToOne: false
+            referencedRelation: "promotions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaigns_salon_id_fkey"
             columns: ["salon_id"]
             isOneToOne: false
             referencedRelation: "salons"
@@ -885,6 +1056,53 @@ export type Database = {
           },
         ]
       }
+      salon_integrations: {
+        Row: {
+          access_token: string
+          connected_by: string | null
+          created_at: string
+          display_name: string | null
+          expires_at: string | null
+          external_id: string
+          instagram_account_id: string | null
+          provider: string
+          salon_id: string
+          updated_at: string
+        }
+        Insert: {
+          access_token: string
+          connected_by?: string | null
+          created_at?: string
+          display_name?: string | null
+          expires_at?: string | null
+          external_id: string
+          instagram_account_id?: string | null
+          provider: string
+          salon_id: string
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string
+          connected_by?: string | null
+          created_at?: string
+          display_name?: string | null
+          expires_at?: string | null
+          external_id?: string
+          instagram_account_id?: string | null
+          provider?: string
+          salon_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "salon_integrations_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       salon_invites: {
         Row: {
           accepted_at: string | null
@@ -1062,6 +1280,56 @@ export type Database = {
           },
         ]
       }
+      salon_subscriptions: {
+        Row: {
+          cancel_at_period_end: boolean
+          created_at: string
+          current_period_end: string | null
+          plan: string
+          price_id: string | null
+          salon_id: string
+          status: Database["public"]["Enums"]["subscription_status"]
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          trial_end: string | null
+          updated_at: string
+        }
+        Insert: {
+          cancel_at_period_end?: boolean
+          created_at?: string
+          current_period_end?: string | null
+          plan?: string
+          price_id?: string | null
+          salon_id: string
+          status?: Database["public"]["Enums"]["subscription_status"]
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          trial_end?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cancel_at_period_end?: boolean
+          created_at?: string
+          current_period_end?: string | null
+          plan?: string
+          price_id?: string | null
+          salon_id?: string
+          status?: Database["public"]["Enums"]["subscription_status"]
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          trial_end?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "salon_subscriptions_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: true
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       salons: {
         Row: {
           address: string | null
@@ -1074,6 +1342,7 @@ export type Database = {
           booking_window_days: number
           created_at: string
           created_by: string | null
+          custom_domain: string | null
           email: string | null
           facebook_link: string | null
           google_map_link: string | null
@@ -1102,6 +1371,7 @@ export type Database = {
           booking_window_days?: number
           created_at?: string
           created_by?: string | null
+          custom_domain?: string | null
           email?: string | null
           facebook_link?: string | null
           google_map_link?: string | null
@@ -1130,6 +1400,7 @@ export type Database = {
           booking_window_days?: number
           created_at?: string
           created_by?: string | null
+          custom_domain?: string | null
           email?: string | null
           facebook_link?: string | null
           google_map_link?: string | null
@@ -1148,6 +1419,91 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      scheduled_posts: {
+        Row: {
+          asset_id: string | null
+          attempts: number
+          campaign_id: string | null
+          content: string
+          created_at: string
+          created_by: string | null
+          error: string | null
+          external_id: string | null
+          id: string
+          image_url: string | null
+          link_url: string | null
+          platform: Database["public"]["Enums"]["post_platform"]
+          publish_mode: string
+          published_at: string | null
+          salon_id: string
+          scheduled_for: string
+          status: Database["public"]["Enums"]["post_status"]
+          updated_at: string
+        }
+        Insert: {
+          asset_id?: string | null
+          attempts?: number
+          campaign_id?: string | null
+          content: string
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          external_id?: string | null
+          id?: string
+          image_url?: string | null
+          link_url?: string | null
+          platform: Database["public"]["Enums"]["post_platform"]
+          publish_mode?: string
+          published_at?: string | null
+          salon_id: string
+          scheduled_for: string
+          status?: Database["public"]["Enums"]["post_status"]
+          updated_at?: string
+        }
+        Update: {
+          asset_id?: string | null
+          attempts?: number
+          campaign_id?: string | null
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          external_id?: string | null
+          id?: string
+          image_url?: string | null
+          link_url?: string | null
+          platform?: Database["public"]["Enums"]["post_platform"]
+          publish_mode?: string
+          published_at?: string | null
+          salon_id?: string
+          scheduled_for?: string
+          status?: Database["public"]["Enums"]["post_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_posts_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scheduled_posts_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scheduled_posts_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       service_categories: {
         Row: {
@@ -1321,6 +1677,7 @@ export type Database = {
           booking_window_days: number
           created_at: string
           created_by: string | null
+          custom_domain: string | null
           email: string | null
           facebook_link: string | null
           google_map_link: string | null
@@ -1365,6 +1722,7 @@ export type Database = {
           booking_window_days: number
           created_at: string
           created_by: string | null
+          custom_domain: string | null
           email: string | null
           facebook_link: string | null
           google_map_link: string | null
@@ -1416,6 +1774,15 @@ export type Database = {
         Args: { "": string }
         Returns: Record<string, unknown>[]
       }
+      salon_monthly_usage: {
+        Args: { p_salon_id: string }
+        Returns: {
+          active_staff: number
+          ai_messages: number
+          emails_sent: number
+          sms_sent: number
+        }[]
+      }
     }
     Enums: {
       appointment_status:
@@ -1424,6 +1791,14 @@ export type Database = {
         | "completed"
         | "cancelled"
         | "no_show"
+      asset_kind:
+        | "caption"
+        | "promo"
+        | "image_prompt"
+        | "video_prompt"
+        | "hashtags"
+        | "sms"
+        | "email"
       automation_job_status:
         | "pending"
         | "sent"
@@ -1436,9 +1811,20 @@ export type Database = {
         | "comeback_reminder"
         | "birthday_promo"
         | "new_customer_followup"
+      campaign_status: "draft" | "active" | "archived"
       chat_role: "user" | "assistant" | "system"
       message_channel: "sms" | "email"
+      post_platform: "facebook" | "instagram" | "tiktok" | "other"
+      post_status: "scheduled" | "ready" | "published" | "failed" | "cancelled"
       salon_role: "owner" | "admin" | "staff"
+      subscription_status:
+        | "trialing"
+        | "active"
+        | "past_due"
+        | "canceled"
+        | "incomplete"
+        | "unpaid"
+        | "paused"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1573,6 +1959,15 @@ export const Constants = {
         "cancelled",
         "no_show",
       ],
+      asset_kind: [
+        "caption",
+        "promo",
+        "image_prompt",
+        "video_prompt",
+        "hashtags",
+        "sms",
+        "email",
+      ],
       automation_job_status: [
         "pending",
         "sent",
@@ -1587,9 +1982,21 @@ export const Constants = {
         "birthday_promo",
         "new_customer_followup",
       ],
+      campaign_status: ["draft", "active", "archived"],
       chat_role: ["user", "assistant", "system"],
       message_channel: ["sms", "email"],
+      post_platform: ["facebook", "instagram", "tiktok", "other"],
+      post_status: ["scheduled", "ready", "published", "failed", "cancelled"],
       salon_role: ["owner", "admin", "staff"],
+      subscription_status: [
+        "trialing",
+        "active",
+        "past_due",
+        "canceled",
+        "incomplete",
+        "unpaid",
+        "paused",
+      ],
     },
   },
 } as const

@@ -28,7 +28,7 @@ export async function submitPublicBookingAction(_prev: ActionState, formData: Fo
   if (!salon) return { error: "Salon not found." };
 
   const ip = clientIp(await headers());
-  if (!rateLimit(`book:${ip}`, 10, 60_000).ok) {
+  if (!(await rateLimit(`book:${ip}`, 10, 60_000)).ok) {
     return { error: "Too many booking attempts. Please wait a minute and try again." };
   }
 

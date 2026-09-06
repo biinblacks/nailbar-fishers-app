@@ -7,6 +7,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { canManageSalon, requireSalonAccess } from "@/lib/salon";
 import type { SalonRole } from "@/lib/types";
 import { friendlyDbError, fromZodError, str, type ActionState } from "@/lib/action-state";
+import { logAudit } from "@/lib/audit";
 
 const inviteSchema = z.object({
   email: z.string().email("Enter a valid email").max(120),
@@ -54,6 +55,7 @@ export async function inviteMemberAction(_prev: ActionState, formData: FormData)
     emailed = false;
   }
 
+  await logAudit({ salonId: salon.id, userId, action: "team.invite", entity: "invite", meta: { email: parsed.data.email, role: parsed.data.role } });
   revalidatePath(`/app/${slug}/settings`);
   return {
     success: emailed
@@ -86,7 +88,7 @@ export async function updateMemberRoleAction(formData: FormData): Promise<void> 
   const slug = str(formData, "slug");
   const targetUserId = str(formData, "user_id");
   const newRole = str(formData, "role") as SalonRole;
-  const { salon, role } = await requireSalonAccess(slug);
+  const { salon, role, userId } = await requireSalonAccess(slug);
   if (role !== "owner" || !["owner", "admin", "staff"].includes(newRole)) return;
 
   const supabase = await createClient();
@@ -100,6 +102,7 @@ export async function updateMemberRoleAction(formData: FormData): Promise<void> 
   if (target.role === "owner" && newRole !== "owner" && (await ownerCount(salon.id)) <= 1) return; // keep at least one owner
 
   await supabase.from("salon_members").update({ role: newRole }).eq("salon_id", salon.id).eq("user_id", targetUserId);
+  await logAudit({ salonId: salon.id, userId, action: "team.role_change", entity: "member", entityId: targetUserId, meta: { role: newRole } });
   revalidatePath(`/app/${slug}`, "layout");
 }
 
@@ -121,5 +124,6 @@ export async function removeMemberAction(formData: FormData): Promise<void> {
   if (target.role === "owner" && (await ownerCount(salon.id)) <= 1) return;
 
   await supabase.from("salon_members").delete().eq("salon_id", salon.id).eq("user_id", targetUserId);
+  await logAudit({ salonId: salon.id, userId, action: isSelf ? "team.leave" : "team.remove", entity: "member", entityId: targetUserId });
   revalidatePath(`/app/${slug}`, "layout");
 }

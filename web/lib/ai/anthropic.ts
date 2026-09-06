@@ -36,7 +36,7 @@ export function createAnthropicProvider(apiKey: string, model: string): AiProvid
       for (let round = 0; round <= (req.maxToolRounds ?? 4); round++) {
         const response = await client.messages.create({
           model,
-          max_tokens: 1024,
+          max_tokens: req.maxTokens ?? 1024,
           system: req.system,
           tools,
           messages,

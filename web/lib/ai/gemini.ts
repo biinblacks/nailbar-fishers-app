@@ -43,7 +43,7 @@ export function createGeminiProvider(apiKey: string, model: string): AiProvider 
       const generativeModel = genAI.getGenerativeModel({
         model,
         systemInstruction: req.system,
-        generationConfig: { temperature: 0.5, maxOutputTokens: 700 },
+        generationConfig: { temperature: 0.5, maxOutputTokens: req.maxTokens ?? 700 },
         tools: req.tools.length ? [{ functionDeclarations: req.tools.map(toDeclaration) }] : undefined,
       });
 

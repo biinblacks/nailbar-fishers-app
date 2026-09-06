@@ -14,6 +14,7 @@ import {
   type ActionState,
 } from "@/lib/action-state";
 import { slugify } from "@/lib/format";
+import { logAudit } from "@/lib/audit";
 
 export async function createSalonAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const name = str(formData, "name");
@@ -49,7 +50,7 @@ export async function updateSalonProfileAction(
   formData: FormData
 ): Promise<ActionState> {
   const slug = str(formData, "slug");
-  const { salon, role } = await requireSalonAccess(slug);
+  const { salon, role, userId } = await requireSalonAccess(slug);
   if (!canManageSalon(role)) return { error: "Only owners and admins can edit the salon profile." };
 
   const parsed = salonProfileSchema.safeParse({
@@ -70,6 +71,7 @@ export async function updateSalonProfileAction(
   const { error } = await supabase.from("salons").update(parsed.data).eq("id", salon.id);
   if (error) return { error: friendlyDbError(error.message) };
 
+  await logAudit({ salonId: salon.id, userId, action: "salon.profile_update", entity: "salon", entityId: salon.id });
   revalidatePath(`/app/${slug}`, "layout");
   return { success: "Salon profile saved." };
 }

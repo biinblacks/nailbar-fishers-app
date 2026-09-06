@@ -19,7 +19,8 @@
     "typecheck": "npm run typecheck --workspace=client && npm run typecheck --workspace=server && npm --prefix web run typecheck",
     "dev:web": "npm --prefix web run dev",
     "build:web": "npm --prefix web run build",
-    "install:web": "npm install --prefix web"
+    "install:web": "npm install --prefix web",
+    "test": "npm --prefix web test"
   },
   "engines": {
     "node": ">=18"

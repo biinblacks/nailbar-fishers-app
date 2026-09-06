@@ -39,6 +39,8 @@ export interface AgentRequest {
   execute: (name: string, args: Record<string, unknown>) => Promise<unknown>;
   /** Safety valve for tool loops. */
   maxToolRounds?: number;
+  /** Output token budget (defaults suit short chat replies). */
+  maxTokens?: number;
 }
 
 export interface AgentResult {

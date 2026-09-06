@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
   if (!access) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!isAiConfigured()) return NextResponse.json({ error: "AI provider is not configured" }, { status: 503 });
 
-  const limit = rateLimit(`translate:${access.userId}`, 90, 60_000);
+  const limit = await rateLimit(`translate:${access.userId}`, 90, 60_000);
   if (!limit.ok) return NextResponse.json({ error: "Slow down a little — too many translations per minute." }, { status: 429 });
 
   if (body.from === body.to) return NextResponse.json({ translation: body.text });

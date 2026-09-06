@@ -7,7 +7,7 @@ import type { Salon } from "@/lib/types";
 
 export function MobileNav({ salon }: { salon: Salon }) {
   const pathname = usePathname();
-  const items = navItems(salon.slug).filter((i) => !/\/(receptionist|gallery|services|staff|automations)$/.test(i.href));
+  const items = navItems(salon.slug).filter((i) => !/\/(receptionist|gallery|services|staff|automations|marketing|billing)$/.test(i.href));
 
   return (
     <nav
