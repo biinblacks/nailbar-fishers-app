@@ -11,10 +11,14 @@ Docs: [`docs/AUDIT.md`](docs/AUDIT.md) · [`docs/ARCHITECTURE.md`](docs/ARCHITEC
 ```
 .
 ├── web/        Next.js 15 (App Router) SaaS dashboard  ← Phase 1, the future of the product
-│   ├── app/        routes: /login /signup /app/new /app/[slug]/{appointments,customers,services,staff,settings}
-│   ├── actions/    server actions (zod-validated, RLS-scoped)
-│   ├── components/ ui/, forms/, app/ (sidebar, nav)
-│   └── lib/        supabase clients, types, validation, formatting, salon access helpers
+│   ├── app/
+│   │   ├── (auth)/ login, signup, forgot-password
+│   │   ├── app/[slug]/  dashboard: appointments, customers, services, staff, inbox, receptionist, settings
+│   │   ├── s/[slug]/    public storefront, /book, /book/[id], /chat (iframe embed), /review
+│   │   └── api/         /api/chat (AI receptionist), /api/salons/[slug]/availability
+│   ├── actions/    server actions (zod-validated; dashboard ones are RLS-scoped)
+│   ├── components/ ui/, forms/, app/ (dashboard shell), storefront/, booking/, chat/
+│   └── lib/        supabase clients, availability engine, booking, ai/ (providers + receptionist)
 ├── client/     Vite + React storefront, booking page, AI chat widget, legacy admin (kept)
 ├── server/     Express API: /api/chat, /api/bookings, /api/salon, /api/admin (tenant-aware)
 ├── supabase/
@@ -35,9 +39,10 @@ Run in the SQL editor, in order:
 
 1. `supabase/schema.sql`
 2. `supabase/migrations/0001_multi_tenant_salons.sql`
-3. `supabase/seed.sql` (optional demo salon `nail-bar`)
+3. `supabase/migrations/0002_receptionist_and_booking.sql`
+4. `supabase/seed.sql` (optional demo salon `nail-bar`)
 
-Upgrading an existing install: run step 2 only. It creates the `nail-bar` salon from your
+Upgrading an existing install: run steps 2 and 3 only. It creates the `nail-bar` salon from your
 current `salon_profile` row, backfills `salon_id` everywhere, and turns every `admin_users`
 row into an **owner** of that salon. It is idempotent.
 
@@ -51,6 +56,11 @@ Auth → URL configuration: add `https://<your-web-domain>/auth/callback` (and
 NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
+SUPABASE_SERVICE_ROLE_KEY=...      # server-only: public booking + AI chat
+AI_PROVIDER=gemini                 # or "anthropic"
+GEMINI_API_KEY=...
+GEMINI_MODEL=gemini-2.5-flash
+# ANTHROPIC_API_KEY=... ANTHROPIC_MODEL=claude-opus-5
 ```
 
 **server/.env** (from `server/.env.example`)
@@ -104,12 +114,24 @@ Existing admins of the Fishers salon: sign in with the same email/password at
 - The Express API picks the salon from the `x-salon-slug` header, `?salon=` query, or
   `DEFAULT_SALON_SLUG`, and checks membership for `/api/admin/*`.
 
-## 6. AI receptionist (current)
+## 6. Storefront, booking and AI receptionist (Phase 2)
 
-Unchanged in behaviour: `POST /api/chat` rebuilds the system prompt from the salon's live
-data on every message (`server/src/services/knowledge.service.ts`), now scoped to one
-salon. Transcripts are visible to salon members only. Phase 2 moves this into Next.js route
-handlers and adds availability-aware booking.
+Every salon gets, with no extra setup:
+
+- `/s/<slug>` — public page: menu, team, hours, map, FAQs, promotions, floating AI chat.
+- `/s/<slug>/book` — online booking with real availability (business hours, service
+  duration, technician conflicts, lead time, booking window, buffer). Requests land as
+  `pending` appointments in the dashboard.
+- `/s/<slug>/chat` — transparent iframe embed for any other website (snippet shown in
+  Dashboard → AI Receptionist).
+- `POST /api/chat` — the receptionist rebuilds its knowledge from live data on every
+  message and can check availability, book (as `source = 'ai'`), and flag a human.
+  Gemini is the default provider; set `AI_PROVIDER=anthropic` to use Claude.
+- Dashboard → Inbox shows every conversation; → AI Receptionist edits knowledge, FAQs,
+  policies, promotions, and booking rules.
+
+The Express API keeps serving the legacy Vite storefront until you cut the domain over to
+`/s/<slug>`.
 
 ## 7. Deployment
 

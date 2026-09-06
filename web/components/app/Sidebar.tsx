@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Bot,
   CalendarDays,
+  Inbox,
   LayoutDashboard,
   Scissors,
   Settings,
@@ -28,6 +30,8 @@ export function navItems(slug: string) {
     { href: `${base}/customers`, label: "Customers", icon: Users },
     { href: `${base}/services`, label: "Services", icon: Scissors },
     { href: `${base}/staff`, label: "Staff", icon: UserRound },
+    { href: `${base}/inbox`, label: "Inbox", icon: Inbox },
+    { href: `${base}/receptionist`, label: "AI Receptionist", icon: Bot },
     { href: `${base}/settings`, label: "Settings", icon: Settings },
   ];
 }

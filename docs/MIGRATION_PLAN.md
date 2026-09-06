@@ -28,21 +28,40 @@ Next.js dashboard, without breaking the current site.
   3. Create a Vercel project with root directory `web`, env vars from `web/.env.example`.
   4. In Supabase Auth → URL configuration, add `https://<web-domain>/auth/callback`.
 
-## Phase 2 — Booking + AI receptionist on Next.js (2–3 weeks)
+## Phase 2 — Booking + AI receptionist on Next.js (this branch) ✅ core delivered
 
-- Public storefront per salon: `/s/[slug]` (profile, hours, services, staff, gallery from
-  Supabase Storage) and `/s/[slug]/book` with **real availability**: business hours,
-  service duration, technician conflicts, buffer time, closed days.
-- Port `knowledge.service.ts` + `ai.service.ts` into `web/app/api/chat/route.ts` (same
-  prompt, same tables; provider abstraction so Gemini can be swapped for Claude/OpenAI).
-  Add tool-calling so the receptionist can check availability and create a `pending`
-  appointment itself (`source = 'ai'`), and recommend services from the menu.
-- Chat widget + `/s/[slug]/chat` embed page in Next.js; inbox at `/app/[slug]/inbox`
-  (port of `MessagesAdmin`) with "needs human" filter and reply-by-SMS placeholder.
-- Team invitations (`salon_invites` table + email), role management in Settings.
-- Supabase generated types (`supabase gen types`) replacing the hand-written `lib/types.ts`.
-- Cut over the Fishers salon: point the domain at `/s/nail-bar`. `client/` and `server/`
-  stay in the repo, marked legacy, until you confirm parity.
+**Goal:** every salon gets a public storefront, availability-aware online booking, and the
+AI receptionist inside the Next.js app, so `client/` + `server/` are no longer required for
+new salons.
+
+- [x] `supabase/migrations/0002_receptionist_and_booking.sql`: booking rules and AI settings
+      on `salons`; `customer_id`, `channel`, `last_message_at`, `message_count`,
+      `resolved_at` on `chat_conversations` (kept fresh by trigger); `conversation_id` on
+      `appointments`.
+- [x] Public storefront `/s/[slug]` (hero, promotions, menu by category, team, hours + map,
+      FAQs) and `/s/[slug]/review`.
+- [x] Availability engine `web/lib/availability.ts` (business hours, service duration,
+      slot interval, lead time, booking window, buffer, technician conflicts, chair
+      capacity for "any technician") + `GET /api/salons/[slug]/availability`.
+- [x] Public booking `/s/[slug]/book` → server action re-validates the slot → pending
+      appointment (`source = 'online'`) → `/s/[slug]/book/[id]` confirmation.
+- [x] AI receptionist port: `web/lib/ai/receptionist.ts` rebuilds the knowledge prompt from
+      live data on every message (same content as the Express version) and adds three
+      tools: `check_availability`, `book_appointment` (`source = 'ai'`, linked to the
+      conversation), `request_human_handoff`. Provider abstraction: Gemini by default
+      (`GEMINI_API_KEY`), Claude via `AI_PROVIDER=anthropic`.
+- [x] `POST /api/chat` (anonymous, IP + session rate limits), chat widget on the storefront,
+      iframe embed at `/s/[slug]/chat`.
+- [x] Dashboard: `/app/[slug]/inbox` (+ transcript view, needs-human / resolved flags,
+      appointments booked from the chat) and `/app/[slug]/receptionist` (AI + booking
+      settings, knowledge, FAQs, policies, promotions, embed snippet).
+- [ ] Team invitations (`salon_invites` + email) — moved to Phase 6.
+- [ ] Supabase generated types replacing `web/lib/types.ts` — moved to Phase 6.
+- [ ] Storage-backed gallery / logos — moved to Phase 6.
+- [ ] **Cut-over checklist for the Fishers salon:** run migration 0002; set
+      `SUPABASE_SERVICE_ROLE_KEY` + `GEMINI_API_KEY` on the Vercel project for `web`; open
+      `/app/nail-bar/receptionist` and review the knowledge; point the domain at
+      `/s/nail-bar` once you are happy; keep `client/` + `server/` running until then.
 
 ## Phase 3 — Bee Interpreter (2 weeks)
 

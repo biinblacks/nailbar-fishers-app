@@ -6,6 +6,7 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Skip static assets so the session refresh only runs for real pages/routes.
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)"],
+  // Only routes that need a user session. Public storefront (/s/*), the
+  // anonymous APIs and static assets skip the session refresh entirely.
+  matcher: ["/", "/app/:path*", "/login", "/signup", "/forgot-password"],
 };
