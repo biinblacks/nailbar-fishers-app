@@ -28,7 +28,7 @@ Next.js dashboard, without breaking the current site.
   3. Create a Vercel project with root directory `web`, env vars from `web/.env.example`.
   4. In Supabase Auth → URL configuration, add `https://<web-domain>/auth/callback`.
 
-## Phase 2 — Booking + AI receptionist on Next.js (this branch) ✅ core delivered
+## Phase 2 — Booking + AI receptionist on Next.js (this branch) ✅
 
 **Goal:** every salon gets a public storefront, availability-aware online booking, and the
 AI receptionist inside the Next.js app, so `client/` + `server/` are no longer required for
@@ -55,10 +55,18 @@ new salons.
 - [x] Dashboard: `/app/[slug]/inbox` (+ transcript view, needs-human / resolved flags,
       appointments booked from the chat) and `/app/[slug]/receptionist` (AI + booking
       settings, knowledge, FAQs, policies, promotions, embed snippet).
-- [ ] Team invitations (`salon_invites` + email) — moved to Phase 6.
-- [ ] Supabase generated types replacing `web/lib/types.ts` — moved to Phase 6.
-- [ ] Storage-backed gallery / logos — moved to Phase 6.
-- [ ] **Cut-over checklist for the Fishers salon:** run migration 0002; set
+- [x] Team invitations (`supabase/migrations/0003_invites_and_media.sql`): `salon_invites`
+      with secret tokens, `get_salon_invite()` / `accept_salon_invite()` RPCs (email must
+      match the signed-in account), Supabase Auth invitation email for new accounts and a
+      shareable link for existing ones, role changes and removal from Settings → Team
+      (always keeps at least one owner), `/invite/[token]` acceptance page.
+- [x] Supabase generated types: `web/lib/database.types.ts` (generated with postgres-meta
+      from the fully migrated schema, see `web/scripts/gen-types.md`) now types every
+      Supabase client, so queries, inserts, joins and RPC arguments are checked by `tsc`.
+- [x] Media on Supabase Storage: public `salon-media` bucket with per-salon write policies,
+      salon logo (Settings), technician photos (Staff → edit), and a gallery
+      (`salon_gallery` table, Dashboard → Gallery, shown on the storefront).
+- [ ] **Cut-over checklist for the Fishers salon:** run migrations 0002 and 0003; set
       `SUPABASE_SERVICE_ROLE_KEY` + `GEMINI_API_KEY` on the Vercel project for `web`; open
       `/app/nail-bar/receptionist` and review the knowledge; point the domain at
       `/s/nail-bar` once you are happy; keep `client/` + `server/` running until then.

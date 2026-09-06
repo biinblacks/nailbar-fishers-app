@@ -1,7 +1,8 @@
+import Image from "next/image";
 import Link from "next/link";
 import { DAY_NAMES, formatPrice, formatTime } from "@/lib/format";
 import type { BusinessHour, Service, ServiceCategory, Staff } from "@/lib/types";
-import type { Faq, Promotion, PublicSalon } from "@/lib/storefront";
+import type { Faq, GalleryImage, Promotion, PublicSalon } from "@/lib/storefront";
 import { Avatar } from "@/components/ui/Avatar";
 
 export function Hero({ salon, promotions }: { salon: PublicSalon; promotions: Promotion[] }) {
@@ -107,7 +108,7 @@ export function StaffGrid({ staff }: { staff: Staff[] }) {
           {staff.map((m) => (
             <div key={m.id} className="glass-card p-5 text-center">
               <div className="flex justify-center">
-                <Avatar name={m.full_name} color={m.color} />
+                <Avatar name={m.full_name} color={m.color} src={m.photo_url} size="lg" />
               </div>
               <p className="mt-3 font-semibold text-blush-900">{m.full_name}</p>
               <p className="text-xs uppercase tracking-wide text-gold-500">{m.title ?? "Nail Technician"}</p>
@@ -186,6 +187,28 @@ export function FaqList({ faqs }: { faqs: Faq[] }) {
             <summary className="cursor-pointer list-none font-semibold text-blush-900">{f.question}</summary>
             <p className="mt-2 text-sm text-blush-800/70">{f.answer}</p>
           </details>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+export function Gallery({ images }: { images: GalleryImage[] }) {
+  if (images.length === 0) return null;
+  return (
+    <section id="gallery" className="mx-auto max-w-6xl px-6 py-16">
+      <div className="text-center">
+        <span className="section-eyebrow">Portfolio</span>
+        <h2 className="mt-3 text-3xl font-bold text-blush-900 md:text-4xl">Gallery</h2>
+      </div>
+      <div className="mt-12 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+        {images.map((img) => (
+          <figure key={img.id} className="group relative aspect-square overflow-hidden rounded-3xl shadow-soft">
+            <Image src={img.image_url} alt={img.caption ?? "Nail design"} fill sizes="(max-width: 768px) 50vw, 25vw" className="object-cover transition duration-500 group-hover:scale-105" />
+            {img.caption && (
+              <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-3 text-xs text-white">{img.caption}</figcaption>
+            )}
+          </figure>
         ))}
       </div>
     </section>

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   Bot,
   CalendarDays,
+  Images,
   Inbox,
   LayoutDashboard,
   Scissors,
@@ -32,6 +33,7 @@ export function navItems(slug: string) {
     { href: `${base}/staff`, label: "Staff", icon: UserRound },
     { href: `${base}/inbox`, label: "Inbox", icon: Inbox },
     { href: `${base}/receptionist`, label: "AI Receptionist", icon: Bot },
+    { href: `${base}/gallery`, label: "Gallery", icon: Images },
     { href: `${base}/settings`, label: "Settings", icon: Settings },
   ];
 }

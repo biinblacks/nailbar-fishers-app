@@ -8,5 +8,5 @@ export async function middleware(request: NextRequest) {
 export const config = {
   // Only routes that need a user session. Public storefront (/s/*), the
   // anonymous APIs and static assets skip the session refresh entirely.
-  matcher: ["/", "/app/:path*", "/login", "/signup", "/forgot-password"],
+  matcher: ["/", "/app/:path*", "/invite/:path*", "/login", "/signup", "/forgot-password"],
 };

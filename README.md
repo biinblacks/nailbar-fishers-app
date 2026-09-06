@@ -40,9 +40,11 @@ Run in the SQL editor, in order:
 1. `supabase/schema.sql`
 2. `supabase/migrations/0001_multi_tenant_salons.sql`
 3. `supabase/migrations/0002_receptionist_and_booking.sql`
-4. `supabase/seed.sql` (optional demo salon `nail-bar`)
+4. `supabase/migrations/0003_invites_and_media.sql` (team invites, gallery, `salon-media` storage bucket)
+5. `supabase/seed.sql` (optional demo salon `nail-bar`)
 
-Upgrading an existing install: run steps 2 and 3 only. It creates the `nail-bar` salon from your
+Upgrading an existing install: run steps 2–4 only. After changing the schema, regenerate
+`web/lib/database.types.ts` (see `web/scripts/gen-types.md`). It creates the `nail-bar` salon from your
 current `salon_profile` row, backfills `salon_id` everywhere, and turns every `admin_users`
 row into an **owner** of that salon. It is idempotent.
 
@@ -129,6 +131,11 @@ Every salon gets, with no extra setup:
   Gemini is the default provider; set `AI_PROVIDER=anthropic` to use Claude.
 - Dashboard → Inbox shows every conversation; → AI Receptionist edits knowledge, FAQs,
   policies, promotions, and booking rules.
+- Dashboard → Settings → Team invites teammates by email (owner / admin / staff). New
+  accounts receive a Supabase Auth invitation; existing accounts get a link to share.
+- Dashboard → Settings (logo), Staff (photos) and Gallery upload images to the public
+  `salon-media` bucket; storage policies only let salon members write under their own
+  salon folder.
 
 The Express API keeps serving the legacy Vite storefront until you cut the domain over to
 `/s/<slug>`.

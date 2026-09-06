@@ -31,9 +31,9 @@ export async function createSalonAction(_prev: ActionState, formData: FormData):
   const { data, error } = await supabase.rpc("create_salon", {
     p_name: parsed.data.name,
     p_slug: parsed.data.slug,
-    p_phone: parsed.data.phone ?? null,
-    p_address: parsed.data.address ?? null,
-    p_email: null,
+    p_phone: parsed.data.phone ?? undefined,
+    p_address: parsed.data.address ?? undefined,
+    p_email: undefined,
     p_timezone: parsed.data.timezone,
   });
 

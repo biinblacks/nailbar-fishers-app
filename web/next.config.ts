@@ -5,6 +5,10 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   // web/ is built standalone (Vercel root directory = web), not from the monorepo root.
   outputFileTracingRoot: process.cwd(),
+  experimental: {
+    // Image uploads (logo, staff photos, gallery) go through server actions.
+    serverActions: { bodySizeLimit: "12mb" },
+  },
   images: {
     remotePatterns: [{ protocol: "https", hostname: "**.supabase.co" }],
   },

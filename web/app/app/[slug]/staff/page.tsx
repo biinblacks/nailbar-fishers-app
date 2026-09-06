@@ -44,7 +44,7 @@ export default async function StaffPage({ params }: { params: Promise<{ slug: st
           {staff.map((member) => (
             <div key={member.id} className="glass-card flex flex-col p-5">
               <div className="flex items-center gap-3">
-                <Avatar name={member.full_name} color={member.color} />
+                <Avatar name={member.full_name} color={member.color} src={member.photo_url} />
                 <div className="min-w-0">
                   <Link href={`/app/${slug}/staff/${member.id}`} className="block truncate font-semibold text-blush-900 hover:underline">
                     {member.full_name}

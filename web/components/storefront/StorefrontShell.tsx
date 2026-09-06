@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { PublicSalon } from "@/lib/storefront";
 import { ChatWidget } from "@/components/chat/ChatWidget";
@@ -16,8 +17,11 @@ export function StorefrontShell({ salon, children, hideChat }: Props) {
     <div className="min-h-screen bg-gradient-to-b from-blush-50 via-white to-white">
       <header className="sticky top-0 z-40 bg-white/80 shadow-sm backdrop-blur-md">
         <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4" aria-label="Salon">
-          <Link href={base} className="font-serif text-2xl font-bold tracking-wide text-blush-600">
-            {nameParts.slice(0, -1).join(" ")} <span className="text-gold-500">{nameParts.at(-1)}</span>
+          <Link href={base} className="flex items-center gap-3 font-serif text-2xl font-bold tracking-wide text-blush-600">
+            {salon.logo_url && <Image src={salon.logo_url} alt="" width={40} height={40} className="h-10 w-10 rounded-xl object-cover" />}
+            <span>
+              {nameParts.slice(0, -1).join(" ")} <span className="text-gold-500">{nameParts.at(-1)}</span>
+            </span>
           </Link>
           <div className="flex items-center gap-4 text-sm font-medium text-blush-800">
             <Link href={`${base}#services`} className="hidden hover:text-blush-500 sm:inline">

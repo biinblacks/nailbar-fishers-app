@@ -19,6 +19,11 @@ export interface Policy {
   title: string;
   content: string;
 }
+export interface GalleryImage {
+  id: string;
+  image_url: string;
+  caption: string | null;
+}
 
 export type PublicSalon = Salon & {
   online_booking_enabled: boolean;
@@ -53,13 +58,14 @@ export interface StorefrontData {
   faqs: Faq[];
   promotions: Promotion[];
   policies: Policy[];
+  gallery: GalleryImage[];
 }
 
 /** Everything the storefront, booking page and AI prompt need, in one round-trip. */
 export const getStorefrontData = cache(async (salonId: string): Promise<StorefrontData> => {
   const db = createAdminClient();
   const today = new Date().toISOString().slice(0, 10);
-  const [categories, services, staff, hours, faqs, promotions, policies] = await Promise.all([
+  const [categories, services, staff, hours, faqs, promotions, policies, gallery] = await Promise.all([
     db.from("service_categories").select("*").eq("salon_id", salonId).order("display_order"),
     db
       .from("services")
@@ -78,6 +84,7 @@ export const getStorefrontData = cache(async (salonId: string): Promise<Storefro
       .eq("is_active", true)
       .or(`ends_at.is.null,ends_at.gte.${today}`),
     db.from("salon_policies").select("id, title, content").eq("salon_id", salonId).order("display_order"),
+    db.from("salon_gallery").select("id, image_url, caption").eq("salon_id", salonId).order("display_order").limit(24),
   ]);
   return {
     categories: (categories.data ?? []) as ServiceCategory[],
@@ -87,5 +94,6 @@ export const getStorefrontData = cache(async (salonId: string): Promise<Storefro
     faqs: (faqs.data ?? []) as Faq[],
     promotions: (promotions.data ?? []) as Promotion[],
     policies: (policies.data ?? []) as Policy[],
+    gallery: (gallery.data ?? []) as GalleryImage[],
   };
 });
