@@ -5,11 +5,12 @@ import { ApiError } from "./error.middleware.js";
 declare module "express-serve-static-core" {
   interface Request {
     adminUserId?: string;
+    adminRole?: "owner" | "admin" | "staff";
   }
 }
 
-// Verifies the Supabase Auth bearer token sent by the admin dashboard.
-// Only authenticated admin users may reach the admin CRUD routes.
+// Verifies the Supabase Auth bearer token sent by the dashboard AND that the
+// user is a member of the salon resolved by the tenant middleware.
 export async function requireAdmin(
   req: Request,
   _res: Response,
@@ -29,6 +30,19 @@ export async function requireAdmin(
     return;
   }
 
+  const { data: membership } = await supabase
+    .from("salon_members")
+    .select("role")
+    .eq("salon_id", req.salon.id)
+    .eq("user_id", data.user.id)
+    .maybeSingle();
+
+  if (!membership) {
+    next(new ApiError(403, "You do not have access to this salon"));
+    return;
+  }
+
   req.adminUserId = data.user.id;
+  req.adminRole = membership.role as "owner" | "admin" | "staff";
   next();
 }

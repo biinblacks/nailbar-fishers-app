@@ -82,3 +82,21 @@ export interface ChatReply {
   reply: string;
   needsHuman: boolean;
 }
+
+export interface Salon {
+  id: string;
+  slug: string;
+  name: string;
+  address: string | null;
+  phone: string | null;
+  email: string | null;
+  timezone: string;
+  parking_info: string | null;
+  google_review_link: string | null;
+  google_map_link: string | null;
+  instagram_link: string | null;
+  facebook_link: string | null;
+  logo_url: string | null;
+  plan: string;
+  is_active: boolean;
+}

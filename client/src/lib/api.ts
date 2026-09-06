@@ -13,12 +13,16 @@ import type {
 } from "./types";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+// Optional: which salon this storefront belongs to. When unset the API falls
+// back to its DEFAULT_SALON_SLUG, so existing single-salon deploys keep working.
+const SALON_SLUG = import.meta.env.VITE_SALON_SLUG;
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const res = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",
+      ...(SALON_SLUG ? { "x-salon-slug": SALON_SLUG } : {}),
       ...options.headers,
     },
   });

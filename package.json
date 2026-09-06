@@ -2,7 +2,7 @@
   "name": "nail-bar-ai-receptionist",
   "private": true,
   "version": "1.0.0",
-  "description": "AI Nail Salon Receptionist SaaS - monorepo (client + server)",
+  "description": "Nail salon SaaS monorepo (web = Next.js platform, client = Vite storefront, server = Express API)",
   "workspaces": [
     "client",
     "server"
@@ -15,8 +15,13 @@
     "build:client": "npm run build --workspace=client",
     "build:server": "npm run build --workspace=server",
     "start": "npm run start --workspace=server",
-    "lint": "npm run lint --workspace=client",
-    "typecheck": "npm run typecheck --workspace=client && npm run typecheck --workspace=server"
+    "lint": "npm run lint --workspace=client && npm --prefix web run lint",
+    "typecheck": "npm run typecheck --workspace=client && npm run typecheck --workspace=server && npm --prefix web run typecheck",
+    "dev:web": "npm --prefix web run dev",
+    "build:web": "npm --prefix web run build",
+    "install:web": "npm install --prefix web",
+    "test": "npm --prefix web test",
+    "test:e2e": "npm --prefix web run test:e2e"
   },
   "engines": {
     "node": ">=18"

@@ -10,6 +10,6 @@ const chatSchema = z.object({
 
 export const postChatMessage = asyncHandler(async (req: Request, res: Response) => {
   const { sessionId, message } = chatSchema.parse(req.body);
-  const reply = await generateChatReply(sessionId, message);
+  const reply = await generateChatReply(req.salon, sessionId, message);
   res.json(reply);
 });

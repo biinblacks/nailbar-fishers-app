@@ -1,4 +1,5 @@
 import { supabase } from "../config/supabase.js";
+import type { Salon } from "../types/index.js";
 
 const DAY_NAMES = [
   "Sunday",
@@ -27,9 +28,9 @@ function formatPrice(cents: number): string {
 // Builds a single system-prompt string from all knowledge-base tables in
 // Supabase. Called fresh on every chat request so admin edits take effect
 // immediately without redeploying the server.
-export async function buildKnowledgeBaseContext(): Promise<string> {
+export async function buildKnowledgeBaseContext(salon: Salon): Promise<string> {
+  const salonId = salon.id;
   const [
-    profileRes,
     hoursRes,
     servicesRes,
     staffRes,
@@ -38,28 +39,29 @@ export async function buildKnowledgeBaseContext(): Promise<string> {
     promosRes,
     knowledgeRes,
   ] = await Promise.all([
-    supabase.from("salon_profile").select("*").limit(1).maybeSingle(),
-    supabase.from("business_hours").select("*").order("day_of_week"),
+    supabase.from("business_hours").select("*").eq("salon_id", salonId).order("day_of_week"),
     supabase
       .from("services")
       .select("name, description, price_cents, price_label, duration_minutes")
+      .eq("salon_id", salonId)
       .eq("is_active", true)
       .order("display_order"),
     supabase
       .from("staff")
       .select("full_name, title, bio")
+      .eq("salon_id", salonId)
       .eq("is_active", true)
       .order("display_order"),
-    supabase.from("salon_policies").select("title, content").order("display_order"),
-    supabase.from("faqs").select("question, answer").eq("is_active", true).order("display_order"),
+    supabase.from("salon_policies").select("title, content").eq("salon_id", salonId).order("display_order"),
+    supabase.from("faqs").select("question, answer").eq("salon_id", salonId).eq("is_active", true).order("display_order"),
     supabase
       .from("promotions")
       .select("title, description, ends_at")
+      .eq("salon_id", salonId)
       .eq("is_active", true),
-    supabase.from("ai_knowledge").select("topic, content").eq("is_active", true),
+    supabase.from("ai_knowledge").select("topic, content").eq("salon_id", salonId).eq("is_active", true),
   ]);
 
-  const profile = profileRes.data;
   const hours = hoursRes.data ?? [];
   const services = servicesRes.data ?? [];
   const staff = staffRes.data ?? [];
@@ -92,13 +94,13 @@ export async function buildKnowledgeBaseContext(): Promise<string> {
 
   return `
 SALON PROFILE
-Name: ${profile?.name ?? "Nail Bar"}
-Address: ${profile?.address ?? "unknown"}
-Phone: ${profile?.phone ?? "unknown"}
-Email: ${profile?.email ?? "unknown"}
-Parking: ${profile?.parking_info ?? "unknown"}
-Google Review Link: ${profile?.google_review_link ?? "unknown"}
-Google Map Link: ${profile?.google_map_link ?? "unknown"}
+Name: ${salon.name}
+Address: ${salon.address ?? "unknown"}
+Phone: ${salon.phone ?? "unknown"}
+Email: ${salon.email ?? "unknown"}
+Parking: ${salon.parking_info ?? "unknown"}
+Google Review Link: ${salon.google_review_link ?? "unknown"}
+Google Map Link: ${salon.google_map_link ?? "unknown"}
 
 BUSINESS HOURS
 ${hoursText || "unknown"}
