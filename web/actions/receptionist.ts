@@ -23,6 +23,19 @@ const settingsSchema = z.object({
     .regex(/^\+[1-9]\d{7,14}$/, "Use the full number in E.164 form, e.g. +13175550182")
     .nullable(),
   sms_ai_autoreply: z.boolean(),
+  voice_ai_enabled: z.boolean(),
+  voice_number: z
+    .string()
+    .regex(/^\+[1-9]\d{7,14}$/, "Use the full number in E.164 form, e.g. +13175550182")
+    .nullable(),
+  voice_greeting: z.string().max(300).nullable(),
+  voice_forward_number: z
+    .string()
+    .regex(/^\+[1-9]\d{7,14}$/, "Use the full number in E.164 form, e.g. +13175550182")
+    .nullable(),
+  voice_language: z.enum(["en", "vi"]),
+  voice_sms_followup: z.boolean(),
+  voice_max_turns: z.number().int().min(1).max(100),
 });
 
 export async function saveReceptionistSettingsAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -41,6 +54,13 @@ export async function saveReceptionistSettingsAction(_prev: ActionState, formDat
     booking_buffer_minutes: num(formData, "booking_buffer_minutes") ?? 0,
     sms_number: optionalStr(formData, "sms_number"),
     sms_ai_autoreply: bool(formData, "sms_ai_autoreply"),
+    voice_ai_enabled: bool(formData, "voice_ai_enabled"),
+    voice_number: optionalStr(formData, "voice_number"),
+    voice_greeting: optionalStr(formData, "voice_greeting"),
+    voice_forward_number: optionalStr(formData, "voice_forward_number"),
+    voice_language: optionalStr(formData, "voice_language") ?? "en",
+    voice_sms_followup: bool(formData, "voice_sms_followup"),
+    voice_max_turns: num(formData, "voice_max_turns") ?? 20,
   });
   if (!parsed.success) return fromZodError(parsed.error);
 

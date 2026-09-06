@@ -36,6 +36,13 @@ export type PublicSalon = Salon & {
   ai_can_book: boolean;
   sms_number: string | null;
   sms_ai_autoreply: boolean;
+  voice_ai_enabled: boolean;
+  voice_number: string | null;
+  voice_greeting: string | null;
+  voice_forward_number: string | null;
+  voice_language: string;
+  voice_sms_followup: boolean;
+  voice_max_turns: number;
 };
 
 const SLUG_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;

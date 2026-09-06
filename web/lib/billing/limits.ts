@@ -17,6 +17,7 @@ export interface UsageSnapshot {
   sms_sent: number;
   emails_sent: number;
   active_staff: number;
+  calls_answered: number;
   campaigns: number;
 }
 
@@ -42,6 +43,7 @@ export async function getUsage(salonId: string): Promise<{ plan: Plan; usage: Us
       sms_sent: Number(row?.sms_sent ?? 0),
       emails_sent: Number(row?.emails_sent ?? 0),
       active_staff: Number(row?.active_staff ?? 0),
+      calls_answered: Number(row?.calls_answered ?? 0),
       campaigns: generations,
     },
   };
