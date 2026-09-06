@@ -1,154 +1,126 @@
-# Nail Bar — AI Nail Salon Receptionist SaaS
+# Nail Bar — Nail Salon SaaS
 
-A production-ready full-stack app for a nail salon: a luxury marketing site, a 24/7 AI
-receptionist chatbot (Gemini), online booking backed by Supabase, an admin dashboard, and
-Google Review automation.
+A multi-tenant platform for nail salons: AI receptionist, online booking, customer CRM,
+and (coming) Vietnamese ⇄ English interpreter, automations, and AI marketing.
 
-## Tech Stack
+Docs: [`docs/AUDIT.md`](docs/AUDIT.md) · [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) ·
+[`docs/MIGRATION_PLAN.md`](docs/MIGRATION_PLAN.md)
 
-- **Frontend:** React 18 + Vite + TypeScript + Tailwind CSS + React Router
-- **Backend:** Node.js + Express + TypeScript
-- **Database/Auth:** Supabase (Postgres + Row Level Security + Auth)
-- **AI:** Google Gemini API (`@google/generative-ai`) — swappable for OpenAI, see below
-- **Deployment:** Vercel (frontend), any Node host for the API (Render, Railway, Fly.io, etc.)
-
-## Monorepo Structure
+## Repository layout
 
 ```
 .
-├── client/                 # React + Vite frontend
-│   └── src/
-│       ├── components/     # layout, home, chat, booking, admin, ui
-│       ├── pages/          # route-level pages (public + /admin/*)
-│       ├── context/        # AuthContext (Supabase Auth), ChatContext (session/memory)
-│       ├── lib/             # api.ts (typed fetch client), supabaseClient.ts, types.ts
-├── server/                 # Express + TypeScript API
-│   └── src/
-│       ├── config/         # env, supabase client, gemini client
-│       ├── controllers/    # request handlers
-│       ├── services/       # ai.service.ts, booking.service.ts, knowledge.service.ts
-│       ├── routes/         # /api/chat, /api/bookings, /api/salon, /api/admin
-│       └── middleware/     # auth (Supabase JWT), error handling
-└── supabase/
-    ├── schema.sql          # full DB schema + RLS policies
-    └── seed.sql            # starter salon data (hours, services, staff, FAQs...)
+├── web/        Next.js 15 (App Router) SaaS dashboard  ← Phase 1, the future of the product
+│   ├── app/        routes: /login /signup /app/new /app/[slug]/{appointments,customers,services,staff,settings}
+│   ├── actions/    server actions (zod-validated, RLS-scoped)
+│   ├── components/ ui/, forms/, app/ (sidebar, nav)
+│   └── lib/        supabase clients, types, validation, formatting, salon access helpers
+├── client/     Vite + React storefront, booking page, AI chat widget, legacy admin (kept)
+├── server/     Express API: /api/chat, /api/bookings, /api/salon, /api/admin (tenant-aware)
+├── supabase/
+│   ├── schema.sql                     base schema (single-salon v1)
+│   ├── migrations/0001_multi_tenant_salons.sql   multi-tenant upgrade (run after schema.sql)
+│   ├── seed.sql                       demo data for the "nail-bar" salon
+│   └── dedupe_and_harden.sql          legacy one-off cleanup (superseded by 0001)
+├── scripts/ping.mjs                   keep-alive for the Render-hosted API
+└── docs/                              audit, architecture, migration plan
 ```
 
-## 1. Set Up Supabase
+`web/` has its own `package-lock.json` and is built standalone (Vercel root directory =
+`web`). `client/` and `server/` are npm workspaces of the root.
 
-1. Create a project at [supabase.com](https://supabase.com).
-2. In the SQL editor, run `supabase/schema.sql`, then `supabase/seed.sql`.
-3. Create your first admin user: **Authentication → Users → Add User** (email + password).
-   Then insert a matching row in `admin_users`:
-   ```sql
-   insert into admin_users (id, full_name, role)
-   values ('<the-user-uuid-from-auth>', 'Salon Owner', 'admin');
-   ```
-4. Copy your **Project URL**, **anon public key**, and **service_role key** from
-   Project Settings → API.
+## 1. Database (Supabase)
 
-## 2. Configure Environment Variables
+Run in the SQL editor, in order:
 
-**server/.env** (copy from `server/.env.example`):
+1. `supabase/schema.sql`
+2. `supabase/migrations/0001_multi_tenant_salons.sql`
+3. `supabase/seed.sql` (optional demo salon `nail-bar`)
+
+Upgrading an existing install: run step 2 only. It creates the `nail-bar` salon from your
+current `salon_profile` row, backfills `salon_id` everywhere, and turns every `admin_users`
+row into an **owner** of that salon. It is idempotent.
+
+Auth → URL configuration: add `https://<your-web-domain>/auth/callback` (and
+`http://localhost:3000/auth/callback` for local dev) to the redirect allow-list.
+
+## 2. Environment variables
+
+**web/.env.local** (from `web/.env.example`)
+```
+NEXT_PUBLIC_SUPABASE_URL=...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+```
+
+**server/.env** (from `server/.env.example`)
 ```
 PORT=4000
 CLIENT_ORIGIN=http://localhost:5173
 SUPABASE_URL=...
 SUPABASE_SERVICE_ROLE_KEY=...
 GEMINI_API_KEY=...
-GEMINI_MODEL=gemini-1.5-flash
+GEMINI_MODEL=gemini-2.5-flash
+DEFAULT_SALON_SLUG=nail-bar
 ```
 
-**client/.env** (copy from `client/.env.example`):
+**client/.env** (from `client/.env.example`)
 ```
 VITE_API_BASE_URL=http://localhost:4000/api
 VITE_SUPABASE_URL=...
 VITE_SUPABASE_ANON_KEY=...
+VITE_SALON_SLUG=nail-bar        # optional; API falls back to DEFAULT_SALON_SLUG
 ```
 
-Get a Gemini API key at [aistudio.google.com/apikey](https://aistudio.google.com/apikey).
-
-## 3. Install & Run Locally
+## 3. Run locally
 
 ```bash
-npm install                # installs both workspaces
-npm run dev                # runs client (5173) + server (4000) concurrently
+npm install            # client + server workspaces
+npm run install:web    # web/ (standalone lockfile)
+
+npm run dev:web        # Next.js dashboard  → http://localhost:3000
+npm run dev            # Vite storefront (5173) + Express API (4000)
 ```
 
-Or individually:
-```bash
-npm run dev:server
-npm run dev:client
-```
+Checks: `npm run typecheck`, `npm run lint`, `npm run build` (client + server),
+`npm run build:web`.
 
-Visit `http://localhost:5173`. Admin dashboard: `http://localhost:5173/admin/login`.
+## 4. First login
 
-## 4. Swapping Gemini for OpenAI
+1. Open `http://localhost:3000/signup`, create an account (confirm the email if
+   confirmations are enabled in Supabase).
+2. You land on `/app/new` — create your salon. The URL slug becomes `/app/<slug>`.
+3. Add services, technicians, and customers; book appointments from the dashboard.
 
-All AI logic lives in `server/src/services/ai.service.ts` and
-`server/src/config/gemini.ts`. To switch providers:
-1. Replace `config/gemini.ts` with an OpenAI client (`openai` npm package).
-2. In `ai.service.ts`, replace the `chat.startChat()` / `sendMessage()` calls with an OpenAI
-   Chat Completions call, keeping the same `systemPrompt` + `history` + `message` inputs.
-3. No other file needs to change — the knowledge-base builder and routes are provider-agnostic.
+Existing admins of the Fishers salon: sign in with the same email/password at
+`/login`; you are already an owner of `/app/nail-bar` after the migration.
 
-## 5. AI Knowledge Base
+## 5. How tenancy works
 
-The chatbot never invents information. On every message, the server rebuilds a system prompt
-from live Supabase data (`server/src/services/knowledge.service.ts`): salon profile, hours,
-services/pricing, staff, policies, promotions, FAQs, and freeform `ai_knowledge` entries.
-Admins edit all of this from **Admin → AI Knowledge** / **Services** / **Hours** — changes are
-reflected on the very next customer message, no redeploy needed.
+- `salons` is the tenant; `salon_members` gives users `owner` / `admin` / `staff` roles.
+- Every table has `salon_id`. Row Level Security policies allow access only when
+  `is_salon_member(salon_id)`; the dashboard uses the anon key + the user's session, so the
+  database enforces isolation.
+- The Express API picks the salon from the `x-salon-slug` header, `?salon=` query, or
+  `DEFAULT_SALON_SLUG`, and checks membership for `/api/admin/*`.
 
-## 6. Booking Flow
+## 6. AI receptionist (current)
 
-`/booking` → select service → date/time → contact info → submits to `POST /api/bookings` →
-redirects to `/booking/confirmation/:id`. Appointments are stored in Supabase `appointments`
-with status `pending`. Admins update status from the dashboard; marking an appointment
-`completed` flags `review_requested = true`, intended to trigger the `/review` page (e.g. via
-a follow-up SMS/email link — see "Google Review Automation" below).
+Unchanged in behaviour: `POST /api/chat` rebuilds the system prompt from the salon's live
+data on every message (`server/src/services/knowledge.service.ts`), now scoped to one
+salon. Transcripts are visible to salon members only. Phase 2 moves this into Next.js route
+handlers and adds availability-aware booking.
 
-## 7. Google Review Automation
+## 7. Deployment
 
-`/review?name=<customer>` renders a thank-you screen with a "Leave a Google Review" button
-linking to the salon's `google_review_link` (configurable in Admin → the salon profile, or
-directly in `salon_profile` table). Wire this into your post-visit SMS/email flow (e.g. a
-Twilio or email automation triggered when an appointment's status changes to `completed`).
+- **web** → Vercel, root directory `web`, framework Next.js, env vars from `web/.env.example`.
+- **client** → Vercel, root directory `client` (unchanged), plus `VITE_SALON_SLUG`.
+- **server** → Render/Railway/Fly, root `server`, `npm run build` / `npm start`, add
+  `DEFAULT_SALON_SLUG`.
 
-## 8. Admin Dashboard Features
+## 8. Security notes
 
-- **Appointments:** view all bookings, update status (pending → confirmed → completed/cancelled/no-show)
-- **Services & Prices:** create/edit/deactivate/delete services
-- **Business Hours:** per-day open/close time or closed toggle
-- **Staff:** manage technician profiles
-- **AI Knowledge:** freeform knowledge entries injected into the chatbot's context
-- **Customer Messages:** browse full chat transcripts, see which conversations need human follow-up
-
-Auth is handled by Supabase Auth (email/password). All `/api/admin/*` routes require a valid
-Supabase session JWT, verified server-side in `server/src/middleware/auth.middleware.ts`.
-
-## 9. Deployment
-
-### Frontend (Vercel)
-1. Import the repo into Vercel, set **Root Directory** to `client`.
-2. Framework preset: Vite. Build command `npm run build`, output `dist`.
-3. Add env vars: `VITE_API_BASE_URL` (your deployed API URL), `VITE_SUPABASE_URL`,
-   `VITE_SUPABASE_ANON_KEY`.
-
-### Backend (Render / Railway / Fly.io / any Node host)
-1. Root directory `server`. Build command `npm run build`, start command `npm start`.
-2. Add env vars from `server/.env.example` (use your real Supabase + Gemini keys).
-3. Set `CLIENT_ORIGIN` to your deployed frontend URL for CORS.
-
-> The Express API is a long-running server (keeps AI chat history via Supabase, uses
-> rate-limiting middleware) so it's deployed as a standalone Node service rather than as
-> Vercel serverless functions. If you prefer serverless, port each router in `server/src/routes`
-> into a Vercel API route (`/api/*.ts`) reusing the existing controllers/services unchanged.
-
-## 10. Security Notes
-
-- The Supabase **service role key** is used only on the server — never exposed to the client.
-- All admin write routes require a verified Supabase session (`requireAdmin` middleware).
-- Row Level Security is enabled on every table; public (anon) access is read-only for
-  storefront content and insert-only for bookings/chat.
-- Chat and booking endpoints are rate-limited (`express-rate-limit`) to control abuse/cost.
+- Service role key is used only by `server/` (never in `web/` or `client/`).
+- Anonymous access is read-only and limited to active storefront content; chat transcripts,
+  customers, and appointments require salon membership.
+- Salons a user cannot access return 404 in the dashboard, so slugs cannot be enumerated.

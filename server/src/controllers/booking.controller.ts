@@ -16,7 +16,7 @@ const bookingSchema = z.object({
 
 export const postBooking = asyncHandler(async (req: Request, res: Response) => {
   const input = bookingSchema.parse(req.body);
-  const appointment = await createBooking({
+  const appointment = await createBooking(req.salon.id, {
     ...input,
     email: input.email || null,
   });
@@ -24,6 +24,6 @@ export const postBooking = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const getBooking = asyncHandler(async (req: Request, res: Response) => {
-  const appointment = await getAppointmentById(req.params.id);
+  const appointment = await getAppointmentById(req.salon.id, req.params.id);
   res.json(appointment);
 });

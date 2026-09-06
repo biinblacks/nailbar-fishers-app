@@ -1,7 +1,7 @@
 import { geminiModel } from "../config/gemini.js";
 import { supabase } from "../config/supabase.js";
 import { buildKnowledgeBaseContext } from "./knowledge.service.js";
-import type { ChatReply } from "../types/index.js";
+import type { ChatReply, Salon } from "../types/index.js";
 
 const HUMAN_HANDOFF_TRIGGERS = [
   "speak to a person",
@@ -14,8 +14,8 @@ const HUMAN_HANDOFF_TRIGGERS = [
   "gặp quản lý",
 ];
 
-function buildSystemPrompt(knowledgeContext: string): string {
-  return `You are the AI receptionist for a luxury nail salon. You are warm, professional, concise, and helpful — like a great front-desk receptionist at a high-end spa.
+function buildSystemPrompt(salonName: string, knowledgeContext: string): string {
+  return `You are the AI receptionist for ${salonName}, a nail salon. You are warm, professional, concise, and helpful — like a great front-desk receptionist at a high-end spa.
 
 RULES:
 - Only answer using the salon information provided below. Never invent prices, hours, addresses, or policies.
@@ -36,10 +36,11 @@ function detectHandoff(message: string): boolean {
   return HUMAN_HANDOFF_TRIGGERS.some((trigger) => lower.includes(trigger));
 }
 
-async function getOrCreateConversation(sessionId: string): Promise<string> {
+async function getOrCreateConversation(salonId: string, sessionId: string): Promise<string> {
   const { data: existing } = await supabase
     .from("chat_conversations")
     .select("id")
+    .eq("salon_id", salonId)
     .eq("session_id", sessionId)
     .maybeSingle();
 
@@ -47,7 +48,7 @@ async function getOrCreateConversation(sessionId: string): Promise<string> {
 
   const { data: created, error } = await supabase
     .from("chat_conversations")
-    .insert({ session_id: sessionId })
+    .insert({ salon_id: salonId, session_id: sessionId })
     .select("id")
     .single();
 
@@ -61,10 +62,11 @@ async function getOrCreateConversation(sessionId: string): Promise<string> {
 // the user message and the assistant reply, and maintaining short-term
 // context memory by replaying prior turns to Gemini.
 export async function generateChatReply(
+  salon: Salon,
   sessionId: string,
   message: string
 ): Promise<ChatReply> {
-  const conversationId = await getOrCreateConversation(sessionId);
+  const conversationId = await getOrCreateConversation(salon.id, sessionId);
 
   const { data: history } = await supabase
     .from("chat_messages")
@@ -73,8 +75,8 @@ export async function generateChatReply(
     .order("created_at", { ascending: true })
     .limit(20);
 
-  const knowledgeContext = await buildKnowledgeBaseContext();
-  const systemPrompt = buildSystemPrompt(knowledgeContext);
+  const knowledgeContext = await buildKnowledgeBaseContext(salon);
+  const systemPrompt = buildSystemPrompt(salon.name, knowledgeContext);
 
   const geminiHistory = (history ?? [])
     .filter((m) => m.role !== "system")

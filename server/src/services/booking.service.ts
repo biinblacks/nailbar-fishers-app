@@ -13,10 +13,11 @@ export interface CreateBookingInput {
   notes?: string | null;
 }
 
-async function upsertCustomer(input: CreateBookingInput): Promise<string> {
+async function upsertCustomer(salonId: string, input: CreateBookingInput): Promise<string> {
   const { data: existing } = await supabase
     .from("customers")
     .select("id")
+    .eq("salon_id", salonId)
     .eq("phone", input.phone)
     .maybeSingle();
 
@@ -30,7 +31,12 @@ async function upsertCustomer(input: CreateBookingInput): Promise<string> {
 
   const { data: created, error } = await supabase
     .from("customers")
-    .insert({ full_name: input.name, phone: input.phone, email: input.email ?? null })
+    .insert({
+      salon_id: salonId,
+      full_name: input.name,
+      phone: input.phone,
+      email: input.email ?? null,
+    })
     .select("id")
     .single();
 
@@ -40,11 +46,15 @@ async function upsertCustomer(input: CreateBookingInput): Promise<string> {
   return created.id as string;
 }
 
-export async function createBooking(input: CreateBookingInput): Promise<Appointment> {
+export async function createBooking(
+  salonId: string,
+  input: CreateBookingInput
+): Promise<Appointment> {
   const { data: service } = await supabase
     .from("services")
-    .select("id")
+    .select("id, duration_minutes")
     .eq("id", input.serviceId)
+    .eq("salon_id", salonId)
     .eq("is_active", true)
     .maybeSingle();
 
@@ -52,11 +62,23 @@ export async function createBooking(input: CreateBookingInput): Promise<Appointm
     throw new ApiError(400, "Selected service is not available");
   }
 
-  const customerId = await upsertCustomer(input);
+  if (input.staffId) {
+    const { data: staff } = await supabase
+      .from("staff")
+      .select("id")
+      .eq("id", input.staffId)
+      .eq("salon_id", salonId)
+      .eq("is_active", true)
+      .maybeSingle();
+    if (!staff) throw new ApiError(400, "Selected technician is not available");
+  }
+
+  const customerId = await upsertCustomer(salonId, input);
 
   const { data: appointment, error } = await supabase
     .from("appointments")
     .insert({
+      salon_id: salonId,
       customer_id: customerId,
       service_id: input.serviceId,
       staff_id: input.staffId ?? null,
@@ -65,8 +87,10 @@ export async function createBooking(input: CreateBookingInput): Promise<Appointm
       customer_email: input.email ?? null,
       appointment_date: input.date,
       appointment_time: input.time,
+      duration_minutes: service.duration_minutes,
       notes: input.notes ?? null,
       status: "pending",
+      source: "online",
     })
     .select("*")
     .single();
@@ -78,11 +102,12 @@ export async function createBooking(input: CreateBookingInput): Promise<Appointm
   return appointment as Appointment;
 }
 
-export async function getAppointmentById(id: string): Promise<Appointment> {
+export async function getAppointmentById(salonId: string, id: string): Promise<Appointment> {
   const { data, error } = await supabase
     .from("appointments")
     .select("*, services(name, price_cents, price_label), staff(full_name)")
     .eq("id", id)
+    .eq("salon_id", salonId)
     .maybeSingle();
 
   if (error || !data) {
