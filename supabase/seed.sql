@@ -103,6 +103,17 @@ begin
   on conflict (salon_id, title) do nothing;
 
   -- AI guidance --------------------------------------------------------------
+  -- Everything create_salon() would have set up for a real signup ----------
+  if to_regprocedure('public.ensure_automation_rules(uuid)') is not null then
+    perform public.ensure_automation_rules(s);
+  end if;
+
+  if to_regclass('public.salon_subscriptions') is not null then
+    insert into salon_subscriptions (salon_id, plan, status, trial_end)
+    values (s, 'starter', 'trialing', now() + interval '14 days')
+    on conflict (salon_id) do nothing;
+  end if;
+
   insert into ai_knowledge (salon_id, topic, content) values
     (s, 'greeting_style', 'Greet guests warmly and professionally, like a friendly front-desk receptionist at a high-end salon. Keep responses short, clear, and helpful.'),
     (s, 'booking_flow', 'When a customer wants to book, ask for: desired service, preferred date/time, name, and phone number. Then direct them to the online booking page or confirm you will pass details to the front desk.'),
