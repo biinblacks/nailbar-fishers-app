@@ -1,6 +1,6 @@
+/* eslint-disable */
 // Generated from the Supabase schema. Do not edit by hand.
 // Regenerate: see scripts/gen-types.md
-/* eslint-disable */
 export type Json =
   | string
   | number
@@ -10,6 +10,11 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.5"
+  }
   public: {
     Tables: {
       admin_users: {
@@ -180,7 +185,7 @@ export type Database = {
           entity: string | null
           entity_id: string | null
           id: number
-          meta: NonNullable<Json>
+          meta: Json
           salon_id: string
           user_id: string | null
         }
@@ -190,7 +195,7 @@ export type Database = {
           entity?: string | null
           entity_id?: string | null
           id?: never
-          meta?: NonNullable<Json>
+          meta?: Json
           salon_id: string
           user_id?: string | null
         }
@@ -200,7 +205,7 @@ export type Database = {
           entity?: string | null
           entity_id?: string | null
           id?: never
-          meta?: NonNullable<Json>
+          meta?: Json
           salon_id?: string
           user_id?: string | null
         }
@@ -390,6 +395,88 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "business_hours_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      call_logs: {
+        Row: {
+          appointment_id: string | null
+          call_sid: string
+          conversation_id: string | null
+          created_at: string
+          duration_seconds: number | null
+          ended_at: string | null
+          error: string | null
+          forwarded_to: string | null
+          from_number: string | null
+          id: string
+          language: string
+          outcome: Database["public"]["Enums"]["call_outcome"] | null
+          salon_id: string
+          started_at: string
+          status: Database["public"]["Enums"]["call_status"]
+          to_number: string | null
+          turn_count: number
+        }
+        Insert: {
+          appointment_id?: string | null
+          call_sid: string
+          conversation_id?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          ended_at?: string | null
+          error?: string | null
+          forwarded_to?: string | null
+          from_number?: string | null
+          id?: string
+          language?: string
+          outcome?: Database["public"]["Enums"]["call_outcome"] | null
+          salon_id: string
+          started_at?: string
+          status?: Database["public"]["Enums"]["call_status"]
+          to_number?: string | null
+          turn_count?: number
+        }
+        Update: {
+          appointment_id?: string | null
+          call_sid?: string
+          conversation_id?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          ended_at?: string | null
+          error?: string | null
+          forwarded_to?: string | null
+          from_number?: string | null
+          id?: string
+          language?: string
+          outcome?: Database["public"]["Enums"]["call_outcome"] | null
+          salon_id?: string
+          started_at?: string
+          status?: Database["public"]["Enums"]["call_status"]
+          to_number?: string | null
+          turn_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "call_logs_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "call_logs_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "chat_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "call_logs_salon_id_fkey"
             columns: ["salon_id"]
             isOneToOne: false
             referencedRelation: "salons"
@@ -1429,6 +1516,13 @@ export type Database = {
           sms_number: string | null
           timezone: string
           updated_at: string
+          voice_ai_enabled: boolean
+          voice_forward_number: string | null
+          voice_greeting: string | null
+          voice_language: string
+          voice_max_turns: number
+          voice_number: string | null
+          voice_sms_followup: boolean
         }
         Insert: {
           address?: string | null
@@ -1460,6 +1554,13 @@ export type Database = {
           sms_number?: string | null
           timezone?: string
           updated_at?: string
+          voice_ai_enabled?: boolean
+          voice_forward_number?: string | null
+          voice_greeting?: string | null
+          voice_language?: string
+          voice_max_turns?: number
+          voice_number?: string | null
+          voice_sms_followup?: boolean
         }
         Update: {
           address?: string | null
@@ -1491,6 +1592,13 @@ export type Database = {
           sms_number?: string | null
           timezone?: string
           updated_at?: string
+          voice_ai_enabled?: boolean
+          voice_forward_number?: string | null
+          voice_greeting?: string | null
+          voice_language?: string
+          voice_max_turns?: number
+          voice_number?: string | null
+          voice_sms_followup?: boolean
         }
         Relationships: []
       }
@@ -1770,6 +1878,13 @@ export type Database = {
           sms_number: string | null
           timezone: string
           updated_at: string
+          voice_ai_enabled: boolean
+          voice_forward_number: string | null
+          voice_greeting: string | null
+          voice_language: string
+          voice_max_turns: number
+          voice_number: string | null
+          voice_sms_followup: boolean
         }
         SetofOptions: {
           from: "*"
@@ -1817,6 +1932,13 @@ export type Database = {
           sms_number: string | null
           timezone: string
           updated_at: string
+          voice_ai_enabled: boolean
+          voice_forward_number: string | null
+          voice_greeting: string | null
+          voice_language: string
+          voice_max_turns: number
+          voice_number: string | null
+          voice_sms_followup: boolean
         }
         SetofOptions: {
           from: "*"
@@ -1825,13 +1947,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      dearmor: { Args: { "": string }; Returns: string }
       ensure_automation_rules: {
         Args: { p_salon_id: string }
         Returns: undefined
       }
-      gen_random_uuid: { Args: Record<PropertyKey, never>; Returns: string }
-      gen_salt: { Args: { "": string }; Returns: string }
       get_salon_invite: {
         Args: { p_token: string }
         Returns: {
@@ -1848,15 +1967,12 @@ export type Database = {
         Returns: boolean
       }
       is_salon_member: { Args: { p_salon_id: string }; Returns: boolean }
-      pgp_armor_headers: {
-        Args: { "": string }
-        Returns: Record<string, unknown>[]
-      }
       salon_monthly_usage: {
         Args: { p_salon_id: string }
         Returns: {
           active_staff: number
           ai_messages: number
+          calls_answered: number
           emails_sent: number
           sms_sent: number
         }[]
@@ -1889,6 +2005,13 @@ export type Database = {
         | "comeback_reminder"
         | "birthday_promo"
         | "new_customer_followup"
+      call_outcome: "answered" | "booked" | "handoff" | "abandoned"
+      call_status:
+        | "in_progress"
+        | "completed"
+        | "forwarded"
+        | "failed"
+        | "no_answer"
       campaign_status: "draft" | "active" | "archived"
       chat_role: "user" | "assistant" | "system"
       message_channel: "sms" | "email"
@@ -2059,6 +2182,14 @@ export const Constants = {
         "comeback_reminder",
         "birthday_promo",
         "new_customer_followup",
+      ],
+      call_outcome: ["answered", "booked", "handoff", "abandoned"],
+      call_status: [
+        "in_progress",
+        "completed",
+        "forwarded",
+        "failed",
+        "no_answer",
       ],
       campaign_status: ["draft", "active", "archived"],
       chat_role: ["user", "assistant", "system"],

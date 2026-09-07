@@ -208,7 +208,7 @@ export async function generateReceptionistReply(
   salon: PublicSalon,
   sessionId: string,
   message: string,
-  channel: "web" | "embed" = "web",
+  channel: "web" | "embed" | "voice" = "web",
   siteUrl?: string
 ): Promise<ReceptionistReply> {
   const db = createAdminClient();

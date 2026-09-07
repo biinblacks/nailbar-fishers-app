@@ -5,11 +5,34 @@ import type { PublicSalon } from "@/lib/storefront";
 import { deleteKnowledgeRowAction } from "@/actions/receptionist";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Card } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
 import { ReceptionistSettingsForm } from "@/components/forms/ReceptionistSettingsForm";
 import { KnowledgeRowForm, type KnowledgeTable } from "@/components/forms/KnowledgeRowForm";
 import { ConfirmButton } from "@/components/forms/ConfirmButton";
 
 export const metadata: Metadata = { title: "AI receptionist" };
+
+const CALL_LABEL: Record<string, string> = {
+  booked: "Booked",
+  handoff: "Sent to a person",
+  answered: "Answered",
+  abandoned: "Hung up",
+  none: "No answer",
+};
+
+const CALL_CLASSES: Record<string, string> = {
+  booked: "border-green-200 bg-green-50 text-green-700",
+  handoff: "border-gold-200 bg-gold-50 text-gold-800",
+  answered: "border-blush-100 bg-blush-50 text-blush-600",
+  abandoned: "border-gray-200 bg-gray-100 text-gray-600",
+  none: "border-gray-200 bg-gray-100 text-gray-600",
+};
+
+function formatDuration(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return m > 0 ? `${m}m ${s}s` : `${s}s`;
+}
 
 const SECTIONS: Array<{ table: KnowledgeTable; title: string; blurb: string; label: (r: Record<string, unknown>) => string }> = [
   { table: "ai_knowledge", title: "Knowledge & tone", blurb: "Freeform notes injected into every AI reply: tone, booking flow, house rules.", label: (r) => String(r.topic) },
@@ -24,12 +47,19 @@ export default async function ReceptionistPage({ params }: { params: Promise<{ s
   const supabase = await createClient();
   const canEdit = canManageSalon(role);
 
-  const [knowledge, faqs, policies, promotions] = await Promise.all([
+  const [knowledge, faqs, policies, promotions, calls] = await Promise.all([
     supabase.from("ai_knowledge").select("*").eq("salon_id", salon.id).order("topic"),
     supabase.from("faqs").select("*").eq("salon_id", salon.id).order("display_order"),
     supabase.from("salon_policies").select("*").eq("salon_id", salon.id).order("display_order"),
     supabase.from("promotions").select("*").eq("salon_id", salon.id).order("created_at", { ascending: false }),
+    supabase
+      .from("call_logs")
+      .select("id, from_number, status, outcome, turn_count, duration_seconds, started_at")
+      .eq("salon_id", salon.id)
+      .order("started_at", { ascending: false })
+      .limit(10),
   ]);
+  const recentCalls = calls.data ?? [];
   const rowsByTable: Record<KnowledgeTable, Array<Record<string, unknown> & { id: string }>> = {
     ai_knowledge: (knowledge.data ?? []) as never,
     faqs: (faqs.data ?? []) as never,
@@ -70,6 +100,45 @@ export default async function ReceptionistPage({ params }: { params: Promise<{ s
           </div>
         </Card>
       </div>
+
+      <Card>
+        <h2 className="text-lg font-semibold text-blush-900">Recent calls</h2>
+        <p className="mt-1 text-xs text-blush-800/60">
+          The last ten calls the AI answered. Turn phone answering on in Settings above.
+        </p>
+        {recentCalls.length === 0 ? (
+          <p className="mt-4 text-sm text-blush-800/60">No calls yet.</p>
+        ) : (
+          <div className="mt-4 overflow-x-auto">
+            <table className="w-full min-w-[34rem] text-sm">
+              <thead>
+                <tr className="text-left text-xs uppercase tracking-wide text-blush-800/60">
+                  <th className="pb-2 pr-4 font-medium">When</th>
+                  <th className="pb-2 pr-4 font-medium">From</th>
+                  <th className="pb-2 pr-4 font-medium">Result</th>
+                  <th className="pb-2 pr-4 font-medium">Turns</th>
+                  <th className="pb-2 font-medium">Length</th>
+                </tr>
+              </thead>
+              <tbody className="text-blush-900">
+                {recentCalls.map((call) => (
+                  <tr key={call.id} className="border-t border-blush-100">
+                    <td className="py-2 pr-4">{new Date(call.started_at).toLocaleString()}</td>
+                    <td className="py-2 pr-4">{call.from_number ?? "unknown"}</td>
+                    <td className="py-2 pr-4">
+                      <Badge className={CALL_CLASSES[call.outcome ?? "none"] ?? CALL_CLASSES.none}>
+                        {CALL_LABEL[call.outcome ?? "none"] ?? call.status}
+                      </Badge>
+                    </td>
+                    <td className="py-2 pr-4">{call.turn_count}</td>
+                    <td className="py-2">{call.duration_seconds != null ? formatDuration(call.duration_seconds) : "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
 
       {SECTIONS.map((section) => (
         <Card key={section.table}>

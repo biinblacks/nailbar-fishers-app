@@ -206,14 +206,48 @@ Delivery receipts: Twilio status callbacks are attached automatically; for email
 Resend webhook pointing at `/api/webhooks/resend` and set `RESEND_WEBHOOK_SECRET`. Both
 endpoints verify signatures and update the message log with delivered/failed status.
 
-## 12. Deployment
+## 12. Answering the phone
+
+The AI can pick up your Twilio number, talk to the caller, quote prices and hours, check
+availability and create the booking — the same brain that runs the web chat, reached by
+voice. It is **off until you turn it on**.
+
+1. Dashboard → AI Receptionist → **Phone calls**: tick "Let the AI answer incoming phone
+   calls", pick the spoken language, and set a transfer number for callers who ask for a
+   person (blank falls back to your salon phone).
+2. Twilio console → your number → **Voice & Fax**:
+   - *A call comes in* → Webhook, POST, `https://<your-domain>/api/webhooks/twilio/voice`
+   - *Call status changes* → `https://<your-domain>/api/webhooks/twilio/voice/status`
+3. Leave "Phone number the AI answers" blank to reuse your SMS number, or set it if voice
+   and texts live on different numbers.
+
+How a call runs: Twilio transcribes each thing the caller says and posts it to
+`/api/webhooks/twilio/voice/turn`; the receptionist answers and we hand Twilio the next
+`<Gather>`. The `CallSid` is the conversation's session id, so every call becomes one
+thread in the Inbox alongside web chats and texts, and `call_logs` records the outcome
+(answered / booked / sent to a person), turn count and duration. The last ten calls show
+on the AI Receptionist page.
+
+Guardrails, because a phone call costs money and reaches a real customer:
+
+- Voice off, no AI key configured, or the plan's AI quota spent → the call is transferred
+  to a human instead of being answered or dropped.
+- Silence gets one re-prompt, then a transfer.
+- A failed AI turn transfers rather than apologising in a loop.
+- "Max turns per call" (default 20) transfers once a conversation is clearly going nowhere.
+- Every webhook verifies the Twilio signature and refuses unsigned requests.
+
+Costs are Twilio's: roughly $1.15/month for the number plus per-minute voice and
+speech-recognition charges. Answered calls count toward the plan's monthly AI usage.
+
+## 13. Deployment
 
 - **web** → Vercel, root directory `web`, framework Next.js, env vars from `web/.env.example`.
 - **client** → Vercel, root directory `client` (unchanged), plus `VITE_SALON_SLUG`.
 - **server** → Render/Railway/Fly, root `server`, `npm run build` / `npm start`, add
   `DEFAULT_SALON_SLUG`.
 
-## 13. Security notes
+## 14. Security notes
 
 - Service role key is used only by `server/` (never in `web/` or `client/`).
 - Anonymous access is read-only and limited to active storefront content; chat transcripts,
