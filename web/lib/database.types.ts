@@ -932,6 +932,69 @@ export type Database = {
           },
         ]
       }
+      leads: {
+        Row: {
+          city: string | null
+          created_at: string
+          email: string | null
+          fbclid: string | null
+          full_name: string
+          id: string
+          note: string | null
+          phone: string
+          referer: string | null
+          salon_name: string | null
+          source: string
+          status: Database["public"]["Enums"]["lead_status"]
+          updated_at: string
+          user_agent: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+        }
+        Insert: {
+          city?: string | null
+          created_at?: string
+          email?: string | null
+          fbclid?: string | null
+          full_name: string
+          id?: string
+          note?: string | null
+          phone: string
+          referer?: string | null
+          salon_name?: string | null
+          source?: string
+          status?: Database["public"]["Enums"]["lead_status"]
+          updated_at?: string
+          user_agent?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Update: {
+          city?: string | null
+          created_at?: string
+          email?: string | null
+          fbclid?: string | null
+          full_name?: string
+          id?: string
+          note?: string | null
+          phone?: string
+          referer?: string | null
+          salon_name?: string | null
+          source?: string
+          status?: Database["public"]["Enums"]["lead_status"]
+          updated_at?: string
+          user_agent?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Relationships: []
+      }
       message_log: {
         Row: {
           body: string
@@ -2014,6 +2077,7 @@ export type Database = {
         | "no_answer"
       campaign_status: "draft" | "active" | "archived"
       chat_role: "user" | "assistant" | "system"
+      lead_status: "new" | "contacted" | "booked" | "won" | "lost"
       message_channel: "sms" | "email"
       post_platform: "facebook" | "instagram" | "tiktok" | "other"
       post_status: "scheduled" | "ready" | "published" | "failed" | "cancelled"
@@ -2193,6 +2257,7 @@ export const Constants = {
       ],
       campaign_status: ["draft", "active", "archived"],
       chat_role: ["user", "assistant", "system"],
+      lead_status: ["new", "contacted", "booked", "won", "lost"],
       message_channel: ["sms", "email"],
       post_platform: ["facebook", "instagram", "tiktok", "other"],
       post_status: ["scheduled", "ready", "published", "failed", "cancelled"],
