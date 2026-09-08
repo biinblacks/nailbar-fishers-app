@@ -240,14 +240,46 @@ Guardrails, because a phone call costs money and reaches a real customer:
 Costs are Twilio's: roughly $1.15/month for the number plus per-minute voice and
 speech-recognition charges. Answered calls count toward the plan's monthly AI usage.
 
-## 13. Deployment
+## 13. The ad landing page
+
+`/tang-truong` is the destination for Facebook ads: a two-step VSL funnel aimed
+at Vietnamese nail salon owners. It is deliberately unlike the marketing site at
+`/` — no navigation, no pricing, no outbound links above the form, because every
+clickable thing on a paid-traffic page is a way to leave. It is `noindex` so it
+never competes with `/` in search.
+
+Structure: hook → **BƯỚC 1** watch the video → proof strip → **BƯỚC 2** book a
+demo → lead form → three FAQs.
+
+Set up:
+
+- `NEXT_PUBLIC_VSL_VIDEO_URL` — a YouTube/Vimeo embed URL or a direct `.mp4`.
+  Leave it blank and the page renders a "video coming soon" panel, so the page
+  can go live before the video exists.
+- `NEXT_PUBLIC_FACEBOOK_PIXEL_ID` — without it you are buying ads blind: no
+  attribution, no retargeting, no optimisation.
+
+Submissions land in `leads`. That table carries **no `salon_id`**: these are
+platform leads (salon owners answering an ad), not any tenant's guests. RLS is
+enabled with no policies at all, so only the service role can touch it — `anon`
+and a signed-in salon owner both read zero rows, which the migration's tests
+assert. Read them in the Supabase Table Editor; there is no in-app view yet
+because the schema has no platform-admin role to gate one behind.
+
+The form guards itself three ways: a honeypot field (bots that fill it get the
+thank-you screen and no row), five submissions per IP per hour, and a 24-hour
+de-duplication on phone number so a double-tap updates the existing lead instead
+of creating a second one for someone to reconcile by hand. UTM parameters and
+`fbclid` are captured from the query string so spend can be judged per campaign.
+
+## 14. Deployment
 
 - **web** → Vercel, root directory `web`, framework Next.js, env vars from `web/.env.example`.
 - **client** → Vercel, root directory `client` (unchanged), plus `VITE_SALON_SLUG`.
 - **server** → Render/Railway/Fly, root `server`, `npm run build` / `npm start`, add
   `DEFAULT_SALON_SLUG`.
 
-## 14. Security notes
+## 15. Security notes
 
 - Service role key is used only by `server/` (never in `web/` or `client/`).
 - Anonymous access is read-only and limited to active storefront content; chat transcripts,
